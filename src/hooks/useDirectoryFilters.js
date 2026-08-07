@@ -1,7 +1,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 
-const LOADING_DELAY = 400
+const LOADING_DELAY = 500
 
 export default function useDirectoryFilters(employees) {
   const [filters, setFilters] = useState({ searchTerm: '', department: 'All' })

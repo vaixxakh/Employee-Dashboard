@@ -1,23 +1,44 @@
 import { Link } from 'react-router-dom'
-import EmployeeList from './EmployeeList'
-import MetricCard from './MetricCard'
-import PageLoader from './PageLoader'
+import React from 'react'
+
+import EmployeeList from '../components/EmployeeList'
+import MetricCard from '../components/MetricCard'
+import PageLoader from '../components/PageLoader'
 import { formatSalary } from '../utils/formatSalary'
 
 function getDashboardStats(employees) {
-  const activeEmployees = employees.filter(({ status }) => status === 'Active').length
-  const inactiveEmployees = employees.filter(({ status }) => status === 'Inactive').length
-  const totalSalary = employees.reduce((total, { salary }) => total + salary, 0)
+  const activeEmployees = employees.filter(
+    ({ status }) => status === 'Active'
+  ).length
+  const inactiveEmployees = employees.filter(
+    ({ status }) => status === 'Inactive'
+  ).length
+  const totalSalary = employees.reduce(
+    (total, { salary }) => total + Number(salary), 0)
 
   return {
     activeEmployees,
     inactiveEmployees,
-    averageSalary: Math.round(totalSalary / employees.length),
-  }
+    averageSalary:
+    employees.length > 0 
+    ? Math.round(totalSalary / employees.length)
+    : 0,
+  };
 }
 
-export default function DashboardPage({ employees, isLoading }) {
-  const { activeEmployees, inactiveEmployees, averageSalary } = getDashboardStats(employees)
+export default function DashboardPage() {
+  const [ employees,setEmployees] = React.useState([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const { activeEmployees, inactiveEmployees, averageSalary } = getDashboardStats(employees);
+
+  React.useEffect(() => {
+    const storedEmployees = JSON.parse(localStorage.getItem("employees")) || [];
+
+    setEmployees(storedEmployees);
+    setIsLoading(false);
+  }, []);
+
+  
 
   return (
     <>
@@ -46,7 +67,7 @@ export default function DashboardPage({ employees, isLoading }) {
           <Link to="/employees">See all -&gt;</Link>
         </div>
         {isLoading && <PageLoader label="Loading employee overview" />}
-        <EmployeeList employees={employees.slice(0, 3)} isLoading={isLoading} />
+        <EmployeeList employees={employees.slice(0, 4)} isLoading={isLoading} />
       </section>
     </>
   )

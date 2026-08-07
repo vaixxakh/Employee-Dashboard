@@ -1,16 +1,17 @@
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import AppLayout from './AppLayout'
-import DashboardPage from './DashboardPage'
+import DashboardPage from '../page/DashboardPage'
 import EmployeeDetailsPage from './EmployeeDetailsPage'
 import EmployeeDirectoryPage from './EmployeeDirectoryPage'
+import AddEmployee from '../page/addEmployee'
 import NotFoundPage from './NotFoundPage'
 
 function withLayout(content, totalEmployees) {
   return <AppLayout totalEmployees={totalEmployees}>{content}</AppLayout>
 }
 
-export default function AppRoutes({ employees, isDirectoryLoading }) {
+export default function AppRoutes({ employees, setEmployees, isDirectoryLoading }) {
   const location = useLocation()
   const reduceMotion = useReducedMotion()
   const totalEmployees = employees.length
@@ -26,6 +27,8 @@ export default function AppRoutes({ employees, isDirectoryLoading }) {
           <Route path="/" element={withLayout(<DashboardPage employees={employees} isLoading={isDirectoryLoading} />, totalEmployees)} />
           <Route path="/employees" element={withLayout(<EmployeeDirectoryPage employees={employees} isLoading={isDirectoryLoading} />, totalEmployees)} />
           <Route path="/employees/:employeeId" element={withLayout(<EmployeeDetailsPage employees={employees} />, totalEmployees)} />
+          <Route path="/employees/add" element={withLayout(<AddEmployee employees={employees}
+          setEmployees={setEmployees} />, totalEmployees)} />
           <Route path="*" element={withLayout(<NotFoundPage />, totalEmployees)} />
         </Routes>
       </motion.div>

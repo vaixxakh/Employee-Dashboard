@@ -21,6 +21,7 @@ export default function EmployeeDetailsPage({ employees }) {
       </section>
       <section className="details panel">
         <div><span>Email</span><strong>{employee.email}</strong></div>
+        <div><span>Salary</span><strong>{employee.salary}</strong></div>
         <div><span>Location</span><strong>{employee.location}</strong></div>
         <div><span>Start date</span><strong>{employee.startDate}</strong></div>
       </section>

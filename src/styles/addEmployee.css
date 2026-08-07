@@ -1,0 +1,175 @@
+/* ===========================
+   Add Employee Form
+=========================== */
+
+.add-employee-form {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 22px 24px;
+  margin-top: 20px;
+}
+
+.add-employee-form label {
+  display: block;
+  margin-bottom: 8px;
+  color: #344054;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.add-employee-form input,
+.add-employee-form select {
+  width: 100%;
+  padding: 13px 15px;
+  border: 1px solid #d8dde7;
+  border-radius: 10px;
+  background: #fff;
+  color: #182233;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all .25s ease;
+  box-sizing: border-box;
+}
+
+.add-employee-form input::placeholder {
+  color: #98a2b3;
+}
+
+.add-employee-form input:focus,
+.add-employee-form select:focus {
+  outline: none;
+  border-color: #5c55df;
+  box-shadow: 0 0 0 4px rgba(92, 85, 223, .12);
+}
+
+.add-employee-form select {
+  cursor: pointer;
+}
+
+/* Form Group */
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Full Width Elements */
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Submit Button */
+
+.add-employee-form .primary-button {
+  width: fit-content;
+  min-width: 180px;
+  padding: 14px 24px;
+  cursor: pointer;
+  border: none;
+  justify-self: flex-start;
+}
+
+.add-employee-form .primary-button:hover {
+  transform: translateY(-2px);
+}
+
+.add-employee-form .primary-button:active {
+  transform: scale(.97);
+}
+
+/* ===========================
+   Page Heading
+=========================== */
+
+.page-heading {
+  margin-bottom: 28px;
+}
+
+.page-heading h1 {
+  margin-bottom: 8px;
+}
+
+.page-heading p {
+  color: #667085;
+  font-size: 15px;
+}
+
+/* ===========================
+   Panel
+=========================== */
+
+.panel {
+  padding: 35px;
+}
+
+/* ===========================
+   Tablet
+=========================== */
+
+@media (max-width: 900px) {
+
+  .panel {
+    padding: 25px;
+  }
+
+  .add-employee-form {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .full-width {
+    grid-column: auto;
+  }
+
+  .add-employee-form .primary-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+}
+
+/* ===========================
+   Mobile
+=========================== */
+
+@media (max-width: 600px) {
+
+  .panel {
+    padding: 20px;
+    border-radius: 14px;
+  }
+
+  .add-employee-form {
+    gap: 16px;
+  }
+
+  .add-employee-form label {
+    font-size: 13px;
+  }
+
+  .add-employee-form input,
+  .add-employee-form select {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+}
+
+/* ===========================
+   Small Mobile
+=========================== */
+
+@media (max-width: 380px) {
+
+  .panel {
+    padding: 16px;
+  }
+
+  .add-employee-form input,
+  .add-employee-form select {
+    padding: 11px;
+    font-size: 13px;
+  }
+
+}
