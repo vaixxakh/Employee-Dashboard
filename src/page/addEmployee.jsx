@@ -1,6 +1,7 @@
 import React from 'react';
 import '../styles/addEmployee.css'
 import { Link , useNavigate} from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const initialEmployee = {
   id: "",
@@ -10,6 +11,8 @@ const initialEmployee = {
   department: "",
   salary: "",
   status: "",
+  location: "",
+    startDate: "",
 };
 
 export default function AddEmployeePage({employees, setEmployees}) {
@@ -18,10 +21,6 @@ export default function AddEmployeePage({employees, setEmployees}) {
 
     const [employee, setEmployee] = React.useState(initialEmployee);
     
-    const yearlySalary = employee.salary * 12;
-    const lpa = Number((yearlySalary / 100000).toFixed(2));
-  
-
 
     const handleChange = (e) => {
         const {name, value} = e.target;
@@ -32,9 +31,43 @@ export default function AddEmployeePage({employees, setEmployees}) {
         }));
     };
 
+            const validateEmployee = () => {
+        if (employee.name.trim().length < 3) {
+            return "Employee name must contain at least 3 characters.";
+        }
+
+        const emailExists = employees.some(
+            (emp) =>
+            emp.email.toLowerCase() === employee.email.toLowerCase()
+        );
+
+        if (emailExists) {
+            return "Email already exists.";
+        }
+
+        if (employee.salary <= 0) {
+            return "Salary must be greater than 0.";
+        }
+        if (employee.location.trim().length < 2) {
+        return "Location is required.";
+        };
+        if (!employee.startDate) {
+        return "Please select a start date.";
+        }
+
+        return null;
+        };
+
     const handleSubmit = (e) => {
         e.preventDefault();
         
+       const error = validateEmployee();
+
+        if (error) {
+           toast.error(error);
+            return;
+        }
+
         const initials = employee.name
             .trim()
             .split(/\s+/)
@@ -44,12 +77,10 @@ export default function AddEmployeePage({employees, setEmployees}) {
 
         const newEmployee = {
             ...employee,
-            id: Date.now().toString(),
+            id: crypto.randomUUID(),
             initials,
-            yearlySalary,
-            lpa,
         };
-          const updatedEmployees = [...employees, newEmployee];
+          const updatedEmployees = [newEmployee, ...employees ];
             setEmployees(updatedEmployees);
 
             localStorage.setItem(
@@ -59,10 +90,11 @@ export default function AddEmployeePage({employees, setEmployees}) {
 
         
         console.log('New Employee:', newEmployee);
-          alert("Employee added successfully!");
-
-        setEmployee(initialEmployee);
-        navigate("/");
+        setTimeout(() => {
+            toast.success("Employee added successfully!");
+            setEmployee(initialEmployee);
+            navigate("/employees");
+        }, 500);
 
     };
 
@@ -75,7 +107,11 @@ export default function AddEmployeePage({employees, setEmployees}) {
       </div>
 
       <section className="panel">
+
+       
+
         <form className="add-employee-form" onSubmit={handleSubmit}>
+            
 
           <div className="form-group">
             <label htmlFor="name">Employee Name</label>
@@ -132,17 +168,12 @@ export default function AddEmployeePage({employees, setEmployees}) {
               type="number"
               id="salary"
               name="salary"
-              placeholder="Enter employee monthly salary"
+              placeholder="Enter employee  salary"
               value={employee.salary}
               onChange={handleChange}
               min="0"
               required
             />
-            {employee.salary > 0 && (
-             <small className="salary-preview">
-                Annual Salary: ₹{yearlySalary.toLocaleString()} ({lpa} LPA)
-                </small>
-            )}
           </div>
 
           <div className="form-group">
@@ -160,13 +191,48 @@ export default function AddEmployeePage({employees, setEmployees}) {
               <option value="Inactive">Inactive</option>
             </select>
           </div>
+          <div className="form-group">
+        <label htmlFor="location">Location</label>
 
+        <input
+            type="text"
+            id="location"
+            name="location"
+            placeholder="Enter work location"
+            value={employee.location}
+            onChange={handleChange}
+            required
+        />
+        </div>
+        <div className="form-group">
+        <label htmlFor="startDate">Start Date</label>
 
-          <div className="form-group full-width">
-            <button type="submit" className="primary-button">
-              Add Employee
-            </button>
-          </div>
+        <input
+            type="date"
+            id="startDate"
+            name="startDate"
+            value={employee.startDate}
+            onChange={handleChange}
+            required
+        />
+        </div>
+
+        <div className="form-actions">
+        <button
+            type="button"
+            className="secondary-button"
+            onClick={() => navigate("/employees")}
+        >
+            Cancel
+        </button>
+
+        <button
+            type="submit"
+            className="primary-button"
+        >
+            Add Employee
+        </button>
+        </div>
         </form>
       </section>
     </>

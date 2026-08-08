@@ -15,7 +15,7 @@ export default function EmployeeDetailsPage({ employees }) {
         <div>
           <p className="eyebrow">EMPLOYEE PROFILE</p>
           <h1>{employee.name}</h1>
-          <p>{employee.role} &middot; {employee.department}</p>
+          <p>{employee.role}  {employee.department}</p>
           <StatusBadge status={employee.status} />
         </div>
       </section>

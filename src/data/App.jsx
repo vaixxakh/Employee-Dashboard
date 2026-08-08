@@ -3,7 +3,8 @@ import { BrowserRouter } from 'react-router-dom'
 import FullScreenLoader from '../components/FullScreenLoader'
 import AppRoutes from '../components/AppRoutes'
 import ScrollToTop from '../components/ScrollToTop'
-
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from "react-toastify";
 
 
 import '../App.css'
@@ -32,6 +33,17 @@ const [employees, setEmployees] = React.useState([]);
 
   return (
     <BrowserRouter>
+        <ToastContainer
+        position="top-right"
+        autoClose={2500}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        draggable
+        toastClassName="custom-toast"
+        progressClassName="custom-progress"
+      />
       <FullScreenLoader isLoading={isInitializing} />
       <div className={`app-content ${isInitializing ? 'is-initializing' : 'is-ready'}`} aria-busy={isInitializing || isDirectoryLoading}>
         <ScrollToTop />

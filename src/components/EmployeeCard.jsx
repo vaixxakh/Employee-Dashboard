@@ -11,7 +11,7 @@ export default function EmployeeCard({ employee }) {
         <h3>{employee.name}</h3>
         <span className="department">{employee.department}</span>
         <p className="employee-email">{employee.email}</p>
-        <p className="employee-salary">{formatSalary(employee.salary)} / year</p>
+        <p className="employee-salary">{formatSalary(employee.salary)} / month</p>
         <StatusBadge status={employee.status} />
       </div>
     </Link>

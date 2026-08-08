@@ -162,6 +162,16 @@ main {
     margin-top: 12px;
   }
 }
+.custom-toast {
+  background: #5c55df !important;
+  color: #ffffff !important;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.custom-progress {
+  background: #ffffff !important;
+}
 
 .metrics {
   display: grid;
