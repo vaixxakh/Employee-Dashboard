@@ -23,9 +23,29 @@ export default function useDirectoryFilters(employees) {
     const query = appliedFilters.searchTerm.trim().toLowerCase()
 
     return employees.filter((employee) => {
-      const nameMatches = !query || employee.name.toLowerCase().includes(query)
-      const departmentMatches = appliedFilters.department === 'All' || employee.department === appliedFilters.department
-      return nameMatches && departmentMatches
+
+      const nameMatches = 
+        !query || 
+          String(employee.name || '').toLowerCase().includes(query)
+
+      const emailMatches =
+        !query ||
+         String(employee.email || '').toLowerCase().includes(query)
+
+      const departmentSearchMatches = 
+        !query || 
+        String(employee.department || '').toLowerCase().includes(query)
+
+      const departmentFilterMatches  = 
+        appliedFilters.department === 'All' || 
+        employee.department === appliedFilters.department
+
+        
+
+      return(
+        (nameMatches || emailMatches || departmentSearchMatches) &&
+        departmentFilterMatches
+      )
     })
   }, [appliedFilters, employees])
 

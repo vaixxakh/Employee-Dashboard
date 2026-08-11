@@ -1,8 +1,8 @@
 import EmployeeCard from './EmployeeCard'
 import ListSkeleton from './ListSkeleton'
 
-export default function EmployeeList({ employees, emptyMessage = 'No employees found.', isLoading = false }) {
-  if (isLoading) {
+export default function EmployeeList({ employees, emptyMessage = 'No employees found.', isDirectoryLoading = false }) {
+  if (isDirectoryLoading) {
     return <ListSkeleton count={employees.length || 6} />
   }
 

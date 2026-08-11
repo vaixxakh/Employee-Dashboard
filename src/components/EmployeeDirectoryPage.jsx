@@ -3,11 +3,11 @@ import FilterLoader from './FilterLoader'
 import SearchLoader from './SearchLoader'
 import useDirectoryFilters from '../hooks/useDirectoryFilters'
 import {FiPlus} from 'react-icons/fi';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const departments = ['All', 'Frontend', 'Backend', 'Testing', 'Full Stack','UI/UX']
 
-export default function EmployeeDirectoryPage({ employees, isLoading }) {
+export default function EmployeeDirectoryPage({ employees, isDirectoryLoading }) {
   const {
     department,
     filteredEmployees,
@@ -17,8 +17,10 @@ export default function EmployeeDirectoryPage({ employees, isLoading }) {
     updateDepartment,
     updateSearch,
   } = useDirectoryFilters(employees)
-  const isLoadingResults = isLoading || isFilterLoading
 
+  const isLoadingResults = isDirectoryLoading || isFilterLoading
+
+  const navigate = useNavigate();
   return (
     <>
       <section className="page-heading">
@@ -31,7 +33,7 @@ export default function EmployeeDirectoryPage({ employees, isLoading }) {
           <p>Browse your organization's employee directory.</p>
           <button
             className="primary-button"
-            onClick={() => (window.location.href = "/employees/add")}
+            onClick={() => navigate("/employees/add")}
           >
             <FiPlus size={18} />
             <span>Add Employee</span>
@@ -44,7 +46,7 @@ export default function EmployeeDirectoryPage({ employees, isLoading }) {
           <label className="search-box" htmlFor="employee-search">
             <span aria-hidden="true">Search</span>
             <input id="employee-search" type="search" value={searchTerm} onChange={(event) => 
-              updateSearch(event.target.value)} placeholder="Search by employee name" disabled={isLoading} />
+              updateSearch(event.target.value)} placeholder="Search by employee name" disabled={isDirectoryLoading} />
           </label>
 
           <label className="department-filter" htmlFor="department-filter">
@@ -57,7 +59,7 @@ export default function EmployeeDirectoryPage({ employees, isLoading }) {
 
         {isLoadingResults && loadingType === 'search' && <SearchLoader count={employees.length} />}
         {isLoadingResults && loadingType === 'filter' && <FilterLoader count={employees.length} />}
-        {isLoadingResults && !loadingType && <EmployeeList employees={employees} isLoading />}
+        {isLoadingResults && !loadingType && <EmployeeList employees={employees} isDirectoryLoading={isDirectoryLoading} />}
         {!isLoadingResults && <div className="results-transition"><EmployeeList employees={filteredEmployees} emptyMessage={`No employees found for "${searchTerm}".`} /></div>}
       </section>
     </>

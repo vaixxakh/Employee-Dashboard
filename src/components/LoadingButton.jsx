@@ -1,9 +1,9 @@
 import ButtonLoader from './ButtonLoader'
 
-export default function LoadingButton({ isLoading, children, className = '', disabled, ...props }) {
+export default function LoadingButton({ isDirectoryLoading, children, className = '', disabled, ...props }) {
   return (
-    <button className={`loading-button ${className}`.trim()} disabled={disabled || isLoading} aria-busy={isLoading} {...props}>
-      {isLoading && <ButtonLoader label="Action in progress" />}
+    <button className={`loading-button ${className}`.trim()} disabled={disabled || isDirectoryLoading} aria-busy={isDirectoryLoading} {...props}>
+      {isDirectoryLoading && <ButtonLoader label="Action in progress" />}
       <span>{children}</span>
     </button>
   )

@@ -1,7 +1,9 @@
 import React from 'react';
 import '../styles/addEmployee.css'
-import { Link , useNavigate} from 'react-router-dom';
+import { Link, useNavigate} from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { validateEmployee } from '../utils/employeeValidation';
+import { getInitials } from '../utils/getInitials';
 
 const initialEmployee = {
   id: "",
@@ -14,6 +16,7 @@ const initialEmployee = {
   location: "",
     startDate: "",
 };
+
 
 export default function AddEmployeePage({employees, setEmployees}) {
 
@@ -31,57 +34,26 @@ export default function AddEmployeePage({employees, setEmployees}) {
         }));
     };
 
-            const validateEmployee = () => {
-        if (employee.name.trim().length < 3) {
-            return "Employee name must contain at least 3 characters.";
-        }
-
-        const emailExists = employees.some(
-            (emp) =>
-            emp.email.toLowerCase() === employee.email.toLowerCase()
-        );
-
-        if (emailExists) {
-            return "Email already exists.";
-        }
-
-        if (employee.salary <= 0) {
-            return "Salary must be greater than 0.";
-        }
-        if (employee.location.trim().length < 2) {
-        return "Location is required.";
-        };
-        if (!employee.startDate) {
-        return "Please select a start date.";
-        }
-
-        return null;
-        };
 
     const handleSubmit = (e) => {
         e.preventDefault();
         
-       const error = validateEmployee();
+       const error = validateEmployee(employee, employees);
 
         if (error) {
            toast.error(error);
             return;
         }
 
-        const initials = employee.name
-            .trim()
-            .split(/\s+/)
-            .map((word) => word.charAt(0).toUpperCase())
-            .join("");
-
+       
 
         const newEmployee = {
             ...employee,
             id: crypto.randomUUID(),
-            initials,
+            initials: getInitials(employee.name),
         };
           const updatedEmployees = [newEmployee, ...employees ];
-            setEmployees(updatedEmployees);
+            setEmployees(updatedEmployees); 
 
             localStorage.setItem(
             "employees",
@@ -89,12 +61,10 @@ export default function AddEmployeePage({employees, setEmployees}) {
             );
 
         
-        console.log('New Employee:', newEmployee);
-        setTimeout(() => {
-            toast.success("Employee added successfully!");
-            setEmployee(initialEmployee);
-            navigate("/employees");
-        }, 500);
+    
+        toast.success("Employee added successfully!");
+        setEmployee(initialEmployee);
+        navigate("/employees");
 
     };
 
@@ -229,6 +199,7 @@ export default function AddEmployeePage({employees, setEmployees}) {
         <button
             type="submit"
             className="primary-button"
+          
         >
             Add Employee
         </button>

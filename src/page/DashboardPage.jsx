@@ -1,6 +1,4 @@
 import { Link } from 'react-router-dom'
-import React from 'react'
-
 import EmployeeList from '../components/EmployeeList'
 import MetricCard from '../components/MetricCard'
 import PageLoader from '../components/PageLoader'
@@ -10,6 +8,7 @@ function getDashboardStats(employees) {
   const activeEmployees = employees.filter(
     ({ status }) => status === 'Active'
   ).length
+  
   const inactiveEmployees = employees.filter(
     ({ status }) => status === 'Inactive'
   ).length
@@ -26,17 +25,9 @@ function getDashboardStats(employees) {
   };
 }
 
-export default function DashboardPage() {
-  const [ employees,setEmployees] = React.useState([]);
-  const [isLoading, setIsLoading] = React.useState(true);
+export default function DashboardPage({employees, isDirectoryLoading}) {
+  
   const { activeEmployees, inactiveEmployees, averageSalary } = getDashboardStats(employees);
-
-  React.useEffect(() => {
-    const storedEmployees = JSON.parse(localStorage.getItem("employees")) || [];
-
-    setEmployees(storedEmployees);
-    setIsLoading(false);
-  }, []);
 
   
 
@@ -66,8 +57,8 @@ export default function DashboardPage() {
           </div>
           <Link to="/employees">See all -&gt;</Link>
         </div>
-        {isLoading && <PageLoader label="Loading employee overview" />}
-        <EmployeeList employees={employees.slice(0, 4)} isLoading={isLoading} />
+        {isDirectoryLoading && <PageLoader label="Loading employee overview" />}
+        <EmployeeList employees={employees.slice(0, 4)} isDirectoryLoading={isDirectoryLoading} />
       </section>
     </>
   )

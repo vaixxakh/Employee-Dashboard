@@ -12,6 +12,7 @@ import '../App.css'
 export default function App() {
   const [isInitializing, setIsInitializing] = React.useState(true)
   const [isDirectoryLoading, setIsDirectoryLoading] =React.useState(true)
+  
 const [employees, setEmployees] = React.useState([]);
 
    React.useEffect(() => {
@@ -29,7 +30,30 @@ const [employees, setEmployees] = React.useState([]);
       window.clearTimeout(initializeTimer)
       window.clearTimeout(directoryTimer)
     }
-  }, [])
+  }, []);
+
+      const handleDeleteEmployee = (employeeId) => {
+      const employeeExists = employees.some(
+        (employee) => employee.id === employeeId
+      )
+
+      if (!employeeExists) {
+        return false
+      }
+
+      const updatedEmployees = employees.filter(
+        (employee) => employee.id !== employeeId
+      )
+
+      setEmployees(updatedEmployees)
+
+      localStorage.setItem(
+        'employees',
+        JSON.stringify(updatedEmployees)
+      )
+
+      return true
+    }
 
   return (
     <BrowserRouter>
@@ -44,10 +68,11 @@ const [employees, setEmployees] = React.useState([]);
         toastClassName="custom-toast"
         progressClassName="custom-progress"
       />
-      <FullScreenLoader isLoading={isInitializing} />
+      <FullScreenLoader isInitializing={isInitializing} />
       <div className={`app-content ${isInitializing ? 'is-initializing' : 'is-ready'}`} aria-busy={isInitializing || isDirectoryLoading}>
         <ScrollToTop />
         <AppRoutes employees={employees} setEmployees={setEmployees}
+        handleDeleteEmployee={handleDeleteEmployee}
          isDirectoryLoading={isDirectoryLoading} />
       </div>
     </BrowserRouter>
