@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { convertToDateInputFormat } from '../utils/formatDate';
 import { validateEmployee } from '../utils/employeeValidation';
 import { getInitials } from '../utils/getInitials';
+import { saveEmployees } from '../utils/employeeStorage';
 
 
 
@@ -79,10 +80,7 @@ const handleSubmit = (e) => {
 
   setEmployees(updatedEmployees)
 
-  localStorage.setItem(
-    'employees',
-    JSON.stringify(updatedEmployees)
-  )
+  saveEmployees(updatedEmployees)
 
   toast.success('Employee updated successfully!')
 
@@ -180,6 +178,8 @@ const handleSubmit = (e) => {
               <option value="">Select Status</option>
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
+              
+
             </select>
           </div>
 

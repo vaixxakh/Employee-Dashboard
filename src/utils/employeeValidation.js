@@ -15,6 +15,12 @@ export function validateEmployee(employee, employees, employeeId = null) {
     return 'Employee name must contain at least 3 characters.'
   }
 
+  
+
+  if (email.length < 3) {
+    return 'Email must contain at least 3 characters.'
+  }
+
   if (!email) {
     return 'Email is required.'
   }
@@ -55,3 +61,5 @@ export function validateEmployee(employee, employees, employeeId = null) {
 
   return null
 }
+
+export default validateEmployee

@@ -1,13 +1,14 @@
 import EmployeeList from './EmployeeList'
 import FilterLoader from './FilterLoader'
 import SearchLoader from './SearchLoader'
+import PageLoader from './PageLoader'
 import useDirectoryFilters from '../hooks/useDirectoryFilters'
 import {FiPlus} from 'react-icons/fi';
 import { Link, useNavigate } from 'react-router-dom';
 
 const departments = ['All', 'Frontend', 'Backend', 'Testing', 'Full Stack','UI/UX']
 
-export default function EmployeeDirectoryPage({ employees, isDirectoryLoading }) {
+export default function EmployeeDirectoryPage({ employees, isDirectoryLoading, loadError, reloadEmployees }) {
   const {
     department,
     filteredEmployees,
@@ -18,9 +19,11 @@ export default function EmployeeDirectoryPage({ employees, isDirectoryLoading })
     updateSearch,
   } = useDirectoryFilters(employees)
 
-  const isLoadingResults = isDirectoryLoading || isFilterLoading
-
   const navigate = useNavigate();
+
+  const hasEmployees = employees.length > 0
+  const hasFilteredResults = filteredEmployees.length > 0
+
   return (
     <>
       <section className="page-heading">
@@ -51,16 +54,31 @@ export default function EmployeeDirectoryPage({ employees, isDirectoryLoading })
 
           <label className="department-filter" htmlFor="department-filter">
             <span>Department</span>
-            <select id="department-filter" value={department} onChange={(event) => updateDepartment(event.target.value)} disabled={isLoadingResults}>
+            <select id="department-filter" value={department} onChange={(event) => updateDepartment(event.target.value)} disabled={isDirectoryLoading || isFilterLoading}>
               {departments.map((departmentName) => <option key={departmentName}>{departmentName}</option>)}
             </select>
           </label>
         </div>
 
-        {isLoadingResults && loadingType === 'search' && <SearchLoader count={employees.length} />}
-        {isLoadingResults && loadingType === 'filter' && <FilterLoader count={employees.length} />}
-        {isLoadingResults && !loadingType && <EmployeeList employees={employees} isDirectoryLoading={isDirectoryLoading} />}
-        {!isLoadingResults && <div className="results-transition"><EmployeeList employees={filteredEmployees} emptyMessage={`No employees found for "${searchTerm}".`} /></div>}
+        {/* Rendering priority: Loading -> Error -> Empty list -> No search results -> List */}
+        {isDirectoryLoading && <PageLoader />}
+
+        {!isDirectoryLoading && loadError && (
+          <div className="panel-error">
+            <p>Unable to load employees. Please try again.</p>
+            <button className="primary-button" onClick={reloadEmployees}>Retry</button>
+          </div>
+        )}
+
+        {!isDirectoryLoading && !loadError && isFilterLoading && loadingType === 'search' && <SearchLoader count={employees.length} />}
+        {!isDirectoryLoading && !loadError && isFilterLoading && loadingType === 'filter' && <FilterLoader count={employees.length} />}
+
+        {!isDirectoryLoading && !loadError && !isFilterLoading && !hasEmployees && <EmployeeList employees={[]} emptyMessage={"No employees found"} />}
+
+        {!isDirectoryLoading && !loadError && !isFilterLoading && hasEmployees && !hasFilteredResults && <EmployeeList employees={[]} emptyMessage={"No employees match your search."} />}
+
+        {!isDirectoryLoading && !loadError && !isFilterLoading && hasFilteredResults && <div className="results-transition"><EmployeeList employees={filteredEmployees} /></div>}
+
       </section>
     </>
   )

@@ -4,6 +4,7 @@ import { Link, useNavigate} from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { validateEmployee } from '../utils/employeeValidation';
 import { getInitials } from '../utils/getInitials';
+import { saveEmployees } from '../utils/employeeStorage';
 
 const initialEmployee = {
   id: "",
@@ -53,12 +54,9 @@ export default function AddEmployeePage({employees, setEmployees}) {
             initials: getInitials(employee.name),
         };
           const updatedEmployees = [newEmployee, ...employees ];
-            setEmployees(updatedEmployees); 
+            setEmployees(updatedEmployees);
 
-            localStorage.setItem(
-            "employees",
-            JSON.stringify(updatedEmployees)
-            );
+            saveEmployees(updatedEmployees);
 
         
     

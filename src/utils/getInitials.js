@@ -5,3 +5,5 @@ export function getInitials(name) {
     .map((word) => word.charAt(0).toUpperCase())
     .join('')
 }
+
+export default getInitials

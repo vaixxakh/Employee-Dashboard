@@ -5,7 +5,7 @@ import AppRoutes from '../components/AppRoutes'
 import ScrollToTop from '../components/ScrollToTop'
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from "react-toastify";
-
+import { getEmployees, saveEmployees } from '../utils/employeeStorage'
 
 import '../App.css'
 
@@ -14,13 +14,27 @@ export default function App() {
   const [isDirectoryLoading, setIsDirectoryLoading] =React.useState(true)
   
 const [employees, setEmployees] = React.useState([]);
+  const [loadError, setLoadError] = React.useState(false);
 
-   React.useEffect(() => {
-  const storedEmployees =
-    JSON.parse(localStorage.getItem("employees")) || [];
+  const reloadEmployees = React.useCallback(() => {
+    try {
+      const storedEmployees = getEmployees();
+      setEmployees(storedEmployees);
+      setLoadError(false);
+    } catch (e) {
+      setLoadError(true);
+    }
+  }, []);
 
-  setEmployees(storedEmployees);
-}, []);
+  React.useEffect(() => {
+    try {
+      const storedEmployees = getEmployees();
+      setEmployees(storedEmployees);
+      setLoadError(false);
+    } catch (e) {
+      setLoadError(true);
+    }
+  }, []);
 
     React.useEffect(() => {
     const initializeTimer = window.setTimeout(() => setIsInitializing(false), 650)
@@ -47,10 +61,7 @@ const [employees, setEmployees] = React.useState([]);
 
       setEmployees(updatedEmployees)
 
-      localStorage.setItem(
-        'employees',
-        JSON.stringify(updatedEmployees)
-      )
+      saveEmployees(updatedEmployees)
 
       return true
     }
@@ -73,7 +84,9 @@ const [employees, setEmployees] = React.useState([]);
         <ScrollToTop />
         <AppRoutes employees={employees} setEmployees={setEmployees}
         handleDeleteEmployee={handleDeleteEmployee}
-         isDirectoryLoading={isDirectoryLoading} />
+         isDirectoryLoading={isDirectoryLoading}
+         loadError={loadError}
+         reloadEmployees={reloadEmployees} />
       </div>
     </BrowserRouter>
   )
