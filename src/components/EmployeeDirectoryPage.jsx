@@ -60,13 +60,13 @@ export default function EmployeeDirectoryPage({ employees, isDirectoryLoading, l
           </label>
         </div>
 
-        {/* Rendering priority: Loading -> Error -> Empty list -> No search results -> List */}
+   
         {isDirectoryLoading && <PageLoader />}
 
         {!isDirectoryLoading && loadError && (
           <div className="panel-error">
             <p>Unable to load employees. Please try again.</p>
-            <button className="primary-button" onClick={reloadEmployees}>Retry</button>
+            <button className="primary-button" onClick={reloadEmployees}>Try Again</button>
           </div>
         )}
 

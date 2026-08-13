@@ -1,13 +1,22 @@
 import { Link, Navigate, useNavigate , useParams} from 'react-router-dom'
 import StatusBadge from './StatusBadge'
 import { toast } from 'react-toastify'
+import PageLoader from './PageLoader'
+import { formatSalary } from '../utils/formatSalary'
+import { convertToDateInputFormat } from '../utils/formatDate'
 
-export default function EmployeeDetailsPage({ employees, handleDeleteEmployee }) {
+export default function EmployeeDetailsPage({ employees, handleDeleteEmployee,   isDirectoryLoading,
+ }) {
   const { employeeId } = useParams()
   const navigate = useNavigate();
 
-  const employee = employees.find(({ id }) => id === employeeId)
+      if (isDirectoryLoading) {
+    return <PageLoader label="Loading employee details" />
+  }
 
+const employee = employees.find(
+  (employee) => String(employee.id) === employeeId
+)
   if (!employee) return <Navigate to="/employees" replace />
 
   const handleDelete = () => {
@@ -41,7 +50,7 @@ export default function EmployeeDetailsPage({ employees, handleDeleteEmployee })
         <div>
           <p className="eyebrow">EMPLOYEE PROFILE</p>
           <h1>{employee.name}</h1>
-          <p>{employee.role}  {employee.department}</p>
+          <p>{employee.company ? `${employee.company} - ` : ''}{employee.department}</p>
           <StatusBadge status={employee.status} />
         </div>
           <button className="edit-emp" onClick={() => 
@@ -57,9 +66,9 @@ export default function EmployeeDetailsPage({ employees, handleDeleteEmployee })
       </section>
       <section className="details panel">
         <div><span>Email</span><strong>{employee.email}</strong></div>
-        <div><span>Salary</span><strong>{employee.salary}</strong></div>
+        <div><span>Salary</span><strong>{formatSalary(employee.salary)}</strong></div>
         <div><span>Location</span><strong>{employee.location}</strong></div>
-        <div><span>Start date</span><strong>{employee.startDate}</strong></div>
+        <div><span>Start date</span><strong>{convertToDateInputFormat(employee.startDate)}</strong></div>
       </section>
     </>
   )

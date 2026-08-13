@@ -1,12 +1,12 @@
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import AppLayout from './AppLayout'
-import DashboardPage from '../page/DashboardPage'
+import DashboardPage from '../pages/DashboardPage'
 import EmployeeDetailsPage from './EmployeeDetailsPage'
 import EmployeeDirectoryPage from './EmployeeDirectoryPage'
-import AddEmployee from '../page/AddEmployee'
+import AddEmployee from '../pages/AddEmployee'
 import NotFoundPage from './NotFoundPage'
-import EditEmployee from '../page/EditEmployee'
+import EditEmployee from '../pages/EditEmployee'
 
 function withLayout(content, totalEmployees) {
   return <AppLayout totalEmployees={totalEmployees}>{content}</AppLayout>
@@ -26,21 +26,37 @@ export default function AppRoutes({ employees, setEmployees, isDirectoryLoading,
       <motion.div className="route-transition" key={location.pathname} transition={transition} {...animation}>
 
         <Routes location={location}>
-          <Route path="/" element={withLayout(<DashboardPage employees={employees} isDirectoryLoading={isDirectoryLoading} />, totalEmployees)} />
+          <Route path="/" element={withLayout(<DashboardPage employees={employees} 
+          isDirectoryLoading={isDirectoryLoading} />, totalEmployees)} />
 
-          <Route path="/employees" element={withLayout(<EmployeeDirectoryPage employees={employees} isDirectoryLoading={isDirectoryLoading} loadError={loadError} reloadEmployees={reloadEmployees} />, totalEmployees)} />
+          <Route path="/employees" 
+          element={withLayout(<EmployeeDirectoryPage
+           employees={employees} isDirectoryLoading={isDirectoryLoading} 
+           loadError={loadError} reloadEmployees={reloadEmployees} />,
+            totalEmployees)} />
 
-          <Route path="/employees/:employeeId" element={withLayout(<EmployeeDetailsPage employees={employees} handleDeleteEmployee={handleDeleteEmployee} />, totalEmployees)} />
+          <Route path="/employees/:employeeId" 
+            element={withLayout(<EmployeeDetailsPage 
+            employees={employees} handleDeleteEmployee={handleDeleteEmployee} 
+            isDirectoryLoading={isDirectoryLoading}/>, 
+             totalEmployees)} />
 
-          <Route path="/employees/add" element={withLayout(<AddEmployee employees={employees}
-          setEmployees={setEmployees} />, totalEmployees)} />
+          <Route path="/employees/add" 
+          element={withLayout(<AddEmployee 
+            employees={employees}
+            setEmployees={setEmployees} />,
+             totalEmployees)} />
 
-          <Route path="/employees/:employeeId/edit" element={withLayout(<EditEmployee employees={employees}
-          setEmployees={setEmployees} isDirectoryLoading={isDirectoryLoading}/>, totalEmployees)} />
+          <Route path="/employees/:employeeId/edit" 
+          element={withLayout(<EditEmployee employees={employees}
+          setEmployees={setEmployees} isDirectoryLoading={isDirectoryLoading}/>,
+           totalEmployees)} />
 
-          <Route path="/not-found" element={withLayout(<NotFoundPage />, totalEmployees)} />
+          <Route path="/not-found" element={withLayout(<NotFoundPage />,
+           totalEmployees)} />
 
-          <Route path="*" element={withLayout(<NotFoundPage />, totalEmployees)} />
+          <Route path="*" element={withLayout(<NotFoundPage />,
+           totalEmployees)} />
           
         </Routes>
       </motion.div>

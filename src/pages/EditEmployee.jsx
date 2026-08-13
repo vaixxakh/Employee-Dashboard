@@ -4,7 +4,6 @@ import { toast } from 'react-toastify';
 import { convertToDateInputFormat } from '../utils/formatDate';
 import { validateEmployee } from '../utils/employeeValidation';
 import { getInitials } from '../utils/getInitials';
-import { saveEmployees } from '../utils/employeeStorage';
 
 
 
@@ -16,7 +15,7 @@ export default function EditEmployee({ employees, setEmployees, isDirectoryLoadi
   const [employee, setEmployee] = React.useState(null);
 
   const employeeToEdit = employees.find(
-    (employee) => employee.id === employeeId
+    (employee) => String(employee.id) === employeeId
   )
   React.useEffect(() => {
     if(employeeToEdit) {
@@ -65,7 +64,7 @@ const handleSubmit = (e) => {
         
     const updatedEmployee = {
         ...employee,
-        id: employeeId,
+        id: employeeToEdit.id,
         initials: getInitials(employee.name),
         name: employee.name.trim(),
         email: employee.email.trim(),
@@ -73,14 +72,12 @@ const handleSubmit = (e) => {
     };
      const updatedEmployees = employees.map(
     (existingEmployee) =>
-      existingEmployee.id === employeeId
+      String(existingEmployee.id) === employeeId
         ? updatedEmployee
         : existingEmployee
   )
 
   setEmployees(updatedEmployees)
-
-  saveEmployees(updatedEmployees)
 
   toast.success('Employee updated successfully!')
 

@@ -4,13 +4,13 @@ import { Link, useNavigate} from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { validateEmployee } from '../utils/employeeValidation';
 import { getInitials } from '../utils/getInitials';
-import { saveEmployees } from '../utils/employeeStorage';
 
 const initialEmployee = {
   id: "",
   name: "",
   initials: "",
   email: "",
+  company: "",
   department: "",
   salary: "",
   status: "",
@@ -55,8 +55,6 @@ export default function AddEmployeePage({employees, setEmployees}) {
         };
           const updatedEmployees = [newEmployee, ...employees ];
             setEmployees(updatedEmployees);
-
-            saveEmployees(updatedEmployees);
 
         
     

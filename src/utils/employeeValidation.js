@@ -31,7 +31,7 @@ export function validateEmployee(employee, employees, employeeId = null) {
 
   const emailExists = employees.some(
     (existingEmployee) =>
-      existingEmployee.id !== employeeId &&
+      String(existingEmployee.id) !== String(employeeId) &&
       existingEmployee.email.trim().toLowerCase() === email.toLowerCase()
   )
 

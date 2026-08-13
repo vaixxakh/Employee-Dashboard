@@ -36,6 +36,10 @@ export default function useDirectoryFilters(employees) {
         !query || 
         String(employee.department || '').toLowerCase().includes(query)
 
+      const companyMatches =
+        !query ||
+        String(employee.company || '').toLowerCase().includes(query)
+
       const departmentFilterMatches  = 
         appliedFilters.department === 'All' || 
         employee.department === appliedFilters.department
@@ -43,7 +47,7 @@ export default function useDirectoryFilters(employees) {
         
 
       return(
-        (nameMatches || emailMatches || departmentSearchMatches) &&
+        (nameMatches || emailMatches || companyMatches || departmentSearchMatches) &&
         departmentFilterMatches
       )
     })
