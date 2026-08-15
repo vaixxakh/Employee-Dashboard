@@ -1,21 +1,24 @@
 import React from 'react'
+
 import { Link, Navigate,  useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { convertToDateInputFormat } from '../utils/formatDate';
 import { validateEmployee } from '../utils/employeeValidation';
-import { getInitials } from '../utils/getInitials';
 
 
 
-export default function EditEmployee({ employees, setEmployees, isDirectoryLoading }) {
+
+
+export default function EditEmployee({ employees, updateEmployee, isDirectoryLoading }) {
 
   const { employeeId } = useParams()
   const navigate = useNavigate()
   
   const [employee, setEmployee] = React.useState(null);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const employeeToEdit = employees.find(
-    (employee) => String(employee.id) === employeeId
+    (employee) => String(employee.id) === String(employeeId)
   )
   React.useEffect(() => {
     if(employeeToEdit) {
@@ -51,8 +54,12 @@ if (!employee) {
   };
   
 
-const handleSubmit = (e) => {
+const handleSubmit = async (e) => {
   e.preventDefault();
+
+  if (isSubmitting) {
+    return;
+  }
 
     const error = validateEmployee(employee, employees, employeeId);
 
@@ -61,28 +68,31 @@ const handleSubmit = (e) => {
         return; 
     }
 
-        
-    const updatedEmployee = {
-        ...employee,
-        id: employeeToEdit.id,
-        initials: getInitials(employee.name),
-        name: employee.name.trim(),
-        email: employee.email.trim(),
 
-    };
-     const updatedEmployees = employees.map(
-    (existingEmployee) =>
-      String(existingEmployee.id) === employeeId
-        ? updatedEmployee
-        : existingEmployee
-  )
+  setIsSubmitting(true);
 
-  setEmployees(updatedEmployees)
+  try {
+     await updateEmployee(employeeId, {
+    name: employee.name.trim(),
+    email: employee.email.trim(),
+    company: {
+      name: employee.company.trim(),
+    },
+    department: employee.department,
+    salary: employee.salary,
+    status: employee.status,
+    location: employee.location,
+    startDate: employee.startDate,
+  })
 
-  toast.success('Employee updated successfully!')
+    toast.success('Employee updated successfully!');
 
-  navigate('/employees')
-    
+    navigate('/employees');
+  } catch {
+    toast.error('Unable to update employee. Please try again.');
+  } finally {
+    setIsSubmitting(false);
+  }
 }
 
   return (
@@ -218,9 +228,9 @@ const handleSubmit = (e) => {
             <button
               type="submit"
               className="primary-button"
-              
+              disabled={isSubmitting}
             >
-              Update Employee
+              {isSubmitting ? 'Updating...' : 'Update Employee'}
             </button>
           </div>
 

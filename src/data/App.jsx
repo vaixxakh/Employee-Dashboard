@@ -16,16 +16,16 @@ export default function App() {
 
   const [isInitializing, setIsInitializing] = React.useState(true)
 
-  const {
-    employees, 
-    updateEmployees,
-    isDirectoryLoading,
-    loadError,
-    reloadEmployees,
-    handleDeleteEmployee,
+const {
+  employees,
+  addEmployee,
+  updateEmployee,
+  isDirectoryLoading,
+  loadError,
+  reloadEmployees,
+  handleDeleteEmployee,
 
-
-  } = useEmployees();
+} = useEmployees();
 
     React.useEffect(() => {
     const initializeTimer = window.setTimeout(
@@ -37,9 +37,6 @@ export default function App() {
     }
   }, []);
  
- 
-
-      
 
   return (
     <BrowserRouter>
@@ -55,13 +52,21 @@ export default function App() {
         progressClassName="custom-progress"
       />
       <FullScreenLoader isInitializing={isInitializing} />
-      <div className={`app-content ${isInitializing ? 'is-initializing' : 'is-ready'}`} aria-busy={isInitializing || isDirectoryLoading}>
+      <div className={`app-content ${isInitializing 
+        ? 'is-initializing' : 'is-ready'}`} 
+        aria-busy={isInitializing ||
+         isDirectoryLoading}>
+          
         <ScrollToTop />
-        <AppRoutes employees={employees} setEmployees={updateEmployees}
+
+        <AppRoutes 
+        employees={employees} 
+        addEmployee={addEmployee}
+        updateEmployee={updateEmployee}
         handleDeleteEmployee={handleDeleteEmployee}
-         isDirectoryLoading={isDirectoryLoading}
-         loadError={loadError}
-         reloadEmployees={reloadEmployees} />
+        isDirectoryLoading={isDirectoryLoading}
+        loadError={loadError}
+        reloadEmployees={reloadEmployees} />
       </div>
     </BrowserRouter>
   )

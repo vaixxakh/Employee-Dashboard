@@ -12,7 +12,7 @@ function withLayout(content, totalEmployees) {
   return <AppLayout totalEmployees={totalEmployees}>{content}</AppLayout>
 }
 
-export default function AppRoutes({ employees, setEmployees, isDirectoryLoading, handleDeleteEmployee, loadError, reloadEmployees }) {
+export default function AppRoutes({ employees,  isDirectoryLoading, handleDeleteEmployee, loadError, reloadEmployees , addEmployee, updateEmployee}) {
   const location = useLocation()
   const reduceMotion = useReducedMotion()
   const totalEmployees = employees.length
@@ -44,12 +44,16 @@ export default function AppRoutes({ employees, setEmployees, isDirectoryLoading,
           <Route path="/employees/add" 
           element={withLayout(<AddEmployee 
             employees={employees}
-            setEmployees={setEmployees} />,
+            addEmployee={addEmployee}
+             />,
              totalEmployees)} />
 
           <Route path="/employees/:employeeId/edit" 
-          element={withLayout(<EditEmployee employees={employees}
-          setEmployees={setEmployees} isDirectoryLoading={isDirectoryLoading}/>,
+          element={withLayout(
+          <EditEmployee
+           employees={employees}
+          updateEmployee={updateEmployee}
+          isDirectoryLoading={isDirectoryLoading}/>,
            totalEmployees)} />
 
           <Route path="/not-found" element={withLayout(<NotFoundPage />,

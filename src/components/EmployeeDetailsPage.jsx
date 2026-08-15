@@ -1,14 +1,23 @@
-import { Link, Navigate, useNavigate , useParams} from 'react-router-dom'
-import StatusBadge from './StatusBadge'
-import { toast } from 'react-toastify'
+import React from 'react';
+
 import PageLoader from './PageLoader'
+import StatusBadge from './StatusBadge'
+
+import { Link, Navigate, useNavigate , useParams} from 'react-router-dom'
+import { toast } from 'react-toastify'
 import { formatSalary } from '../utils/formatSalary'
 import { convertToDateInputFormat } from '../utils/formatDate'
+
+import ConfirmModal from "./ConfirmModal";
+
 
 export default function EmployeeDetailsPage({ employees, handleDeleteEmployee,   isDirectoryLoading,
  }) {
   const { employeeId } = useParams()
   const navigate = useNavigate();
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
+  const [isDeleting, setIsDeleting] = React.useState(false);
 
       if (isDirectoryLoading) {
     return <PageLoader label="Loading employee details" />
@@ -19,25 +28,34 @@ const employee = employees.find(
 )
   if (!employee) return <Navigate to="/employees" replace />
 
-  const handleDelete = () => {
-  const confirmed = window.confirm(
-    `Are you sure you want to delete ${employee.name}?`
-  )
+  const handleDelete = async () => {
 
-  if (!confirmed) {
+  if (isDeleting) {
     return
   }
+    setIsDeleting(true);
 
-  const deleted = handleDeleteEmployee(employee.id)
+    try {
+      const deleted = await handleDeleteEmployee(employee.id)
+      
+      if (!deleted) {
+        toast.error('Employee not found.')
+        return
+      }
 
-  if (!deleted) {
-    toast.error('Employee not found.')
-    return
-  }
+      toast.success('Employee deleted successfully!')    
+         setIsDeleteModalOpen(false)
 
-  toast.success('Employee deleted successfully!')
+        navigate('/employees')
+    } catch {
+      toast.error(
+        "Unable to delete employee. Please try again."
+      );
+    } finally{
+      setIsDeleting(false)
+    }
 
-  navigate('/employees')
+
 }
 
   return (
@@ -57,13 +75,29 @@ const employee = employees.find(
             navigate(`/employees/${employee.id}/edit`)}
             >Edit Employee</button>
 
+          
             <button
             className="delete-emp"
-            onClick={() => handleDelete()}
+              disabled={isDeleting}
+            onClick={() => setIsDeleteModalOpen(true)}
             >
-            Delete Employee
+            {isDeleting ? "Deleting..." : "Delete Employee"}
           </button>
       </section>
+      <ConfirmModal
+              open={isDeleteModalOpen}
+              title="Delete Employee"
+              message="Are you sure you want to delete this employee?"
+              confirmLabel="Delete Employee"
+              cancelLabel="Cancel"
+              isConfirming={isDeleting}
+              onConfirm={handleDelete}
+              onCancel={() => {
+                if (!isDeleting) {
+                  setIsDeleteModalOpen(false);
+                }
+              }}
+            />
       <section className="details panel">
         <div><span>Email</span><strong>{employee.email}</strong></div>
         <div><span>Salary</span><strong>{formatSalary(employee.salary)}</strong></div>

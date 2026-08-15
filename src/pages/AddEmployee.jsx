@@ -1,9 +1,10 @@
 import React from 'react';
+
 import '../styles/addEmployee.css'
+
 import { Link, useNavigate} from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { validateEmployee } from '../utils/employeeValidation';
-import { getInitials } from '../utils/getInitials';
 
 const initialEmployee = {
   id: "",
@@ -19,11 +20,12 @@ const initialEmployee = {
 };
 
 
-export default function AddEmployeePage({employees, setEmployees}) {
+export default function AddEmployeePage({employees, addEmployee}) {
 
     const navigate = useNavigate();
 
     const [employee, setEmployee] = React.useState(initialEmployee);
+    const [ isSubmitting, setIsSubmitting ] = React.useState(false);
     
 
     const handleChange = (e) => {
@@ -36,33 +38,47 @@ export default function AddEmployeePage({employees, setEmployees}) {
     };
 
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        
-       const error = validateEmployee(employee, employees);
+    const handleSubmit = async (e) => {
+  e.preventDefault();
 
-        if (error) {
-           toast.error(error);
-            return;
-        }
+  if (isSubmitting) {
+    return;
+  }
 
-       
+  const error = validateEmployee(employee, employees);
 
-        const newEmployee = {
-            ...employee,
-            id: crypto.randomUUID(),
-            initials: getInitials(employee.name),
-        };
-          const updatedEmployees = [newEmployee, ...employees ];
-            setEmployees(updatedEmployees);
+  if (error) {
+    toast.error(error);
+    return;
+  }
 
-        
-    
-        toast.success("Employee added successfully!");
-        setEmployee(initialEmployee);
-        navigate("/employees");
 
-    };
+  setIsSubmitting(true);
+
+  try {
+    await addEmployee({
+    name: employee.name.trim(),
+    email: employee.email.trim(),
+    company: {
+      name: employee.company.trim(),
+    },
+    department: employee.department,
+    salary: employee.salary,
+    status: employee.status,
+    location: employee.location,
+    startDate: employee.startDate,
+  })
+
+    toast.success("Employee added successfully!");
+
+    setEmployee(initialEmployee);
+    navigate("/employees");
+  } catch {
+    toast.error("Unable to add employee. Please try again.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <>
@@ -195,9 +211,9 @@ export default function AddEmployeePage({employees, setEmployees}) {
         <button
             type="submit"
             className="primary-button"
-          
+            disabled={isSubmitting}  
         >
-            Add Employee
+            {isSubmitting ? 'Adding...' : 'Add Employee'}
         </button>
         </div>
         </form>
