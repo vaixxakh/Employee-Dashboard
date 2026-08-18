@@ -27,7 +27,7 @@
   margin-bottom: 8px;
   color: #344054;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .add-employee-form input,
@@ -75,7 +75,7 @@
   color: #344054;
   font: inherit;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.25s ease;
 }

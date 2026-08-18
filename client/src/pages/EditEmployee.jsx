@@ -75,9 +75,7 @@ const handleSubmit = async (e) => {
      await updateEmployee(employeeId, {
     name: employee.name.trim(),
     email: employee.email.trim(),
-    company: {
-      name: employee.company.trim(),
-    },
+
     department: employee.department,
     salary: employee.salary,
     status: employee.status,

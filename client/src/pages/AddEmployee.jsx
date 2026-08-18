@@ -11,7 +11,6 @@ const initialEmployee = {
   name: "",
   initials: "",
   email: "",
-  company: "",
   department: "",
   salary: "",
   status: "",
@@ -59,9 +58,6 @@ export default function AddEmployeePage({employees, addEmployee}) {
     await addEmployee({
     name: employee.name.trim(),
     email: employee.email.trim(),
-    company: {
-      name: employee.company.trim(),
-    },
     department: employee.department,
     salary: employee.salary,
     status: employee.status,
@@ -140,6 +136,8 @@ export default function AddEmployeePage({employees, addEmployee}) {
               <option value="Full Stack">Full Stack</option>
               <option value="Testing">Testing</option>
               <option value="UI/UX">UI/UX</option>
+              <option value="QA">QA</option>
+              <option value="HR">HR</option>
             </select>
           </div>
 

@@ -1,16 +1,67 @@
-# React + Vite
+# Employee Management Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A full-stack Employee Management Dashboard with a React (Vite) frontend and a Node.js/Express REST API backend.
 
-Currently, two official plugins are available:
+## Project Structure
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```
+project-root/
+├── client/          # React frontend (Vite)
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── hooks/
+│   │   ├── services/
+│   │   ├── mappers/
+│   │   ├── utils/
+│   │   ├── data/
+│   │   ├── App.jsx
+│   │   └── ...
+│   ├── public/
+│   ├── package.json
+│   └── vite.config.js
+│
+├── server/          # Express REST API
+│   ├── src/
+│   │   ├── controllers/
+│   │   ├── routes/
+│   │   ├── middleware/
+│   │   ├── data/
+│   │   ├── app.js
+│   │   └── server.js
+│   └── package.json
+│
+└── README.md
+```
 
-## React Compiler
+## Getting Started
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Backend
 
-## Expanding the Oxlint configuration
+```bash
+cd server
+npm install
+npm start
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+The server runs on `http://localhost:5000`.
+
+### Frontend
+
+```bash
+cd client
+npm install
+npm run dev
+```
+
+The client runs on `http://localhost:5173`.
+
+## API Endpoints
+
+| Method | Endpoint               | Description              |
+|--------|------------------------|--------------------------|
+| GET    | /api/employees         | List all employees       |
+| GET    | /api/employees/:id     | Get employee by ID       |
+| POST   | /api/employees         | Create a new employee    |
+| PUT    | /api/employees/:id     | Update an employee       |
+| DELETE | /api/employees/:id     | Delete an employee       |

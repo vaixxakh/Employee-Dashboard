@@ -6,16 +6,18 @@ import useDirectoryFilters from '../hooks/useDirectoryFilters'
 import {FiPlus} from 'react-icons/fi';
 import { Link, useNavigate } from 'react-router-dom';
 
-const departments = ['All', 'Frontend', 'Backend', 'Testing', 'Full Stack','UI/UX']
+const departments = ['All', 'Frontend', 'Backend', 'Testing', 'Full Stack','UI/UX', 'HR', 'QA']
 
 export default function EmployeeDirectoryPage({ employees, isDirectoryLoading, loadError, reloadEmployees }) {
   const {
     department,
+    status,
     filteredEmployees,
     isLoading: isFilterLoading,
     loadingType,
     searchTerm,
     updateDepartment,
+    updateStatus,
     updateSearch,
   } = useDirectoryFilters(employees)
 
@@ -58,6 +60,15 @@ export default function EmployeeDirectoryPage({ employees, isDirectoryLoading, l
               {departments.map((departmentName) => <option key={departmentName}>{departmentName}</option>)}
             </select>
           </label>
+
+          <label className="status-filter" htmlFor="status-filter">
+            <span>Status</span>
+            <select id="status-filter" value={status} onChange={(event) => updateStatus(event.target.value)} disabled={isDirectoryLoading || isFilterLoading}>
+              <option>All</option>
+              <option>Active</option>
+              <option>Inactive</option>
+            </select>
+          </label>
         </div>
 
    
@@ -75,7 +86,9 @@ export default function EmployeeDirectoryPage({ employees, isDirectoryLoading, l
 
         {!isDirectoryLoading && !loadError && !isFilterLoading && !hasEmployees && <EmployeeList employees={[]} emptyMessage={"No employees found"} />}
 
-        {!isDirectoryLoading && !loadError && !isFilterLoading && hasEmployees && !hasFilteredResults && <EmployeeList employees={[]} emptyMessage={"No employees match your search."} />}
+        {!isDirectoryLoading && !loadError && !isFilterLoading && hasEmployees && !hasFilteredResults && searchTerm.trim() && <EmployeeList employees={[]} emptyMessage={"No employees match your search."} />}
+
+        {!isDirectoryLoading && !loadError && !isFilterLoading && hasEmployees && !hasFilteredResults && !searchTerm.trim() && <EmployeeList employees={[]} emptyMessage={"No employees found"} />}
 
         {!isDirectoryLoading && !loadError && !isFilterLoading && hasFilteredResults && <div className="results-transition"><EmployeeList employees={filteredEmployees} /></div>}
 

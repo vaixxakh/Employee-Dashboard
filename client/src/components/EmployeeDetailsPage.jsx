@@ -68,7 +68,7 @@ const employee = employees.find(
         <div>
           <p className="eyebrow">EMPLOYEE PROFILE</p>
           <h1>{employee.name}</h1>
-          <p>{employee.company ? `${employee.company} - ` : ''}{employee.department}</p>
+          <p>{employee.department}</p>
           <StatusBadge status={employee.status} />
         </div>
           <button className="edit-emp" onClick={() => 
