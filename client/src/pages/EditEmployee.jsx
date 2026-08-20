@@ -16,6 +16,7 @@ export default function EditEmployee({ employees, updateEmployee, isDirectoryLoa
   
   const [employee, setEmployee] = React.useState(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const isSubmittingRef = React.useRef(false);
 
   const employeeToEdit = employees.find(
     (employee) => String(employee.id) === String(employeeId)
@@ -57,7 +58,7 @@ if (!employee) {
 const handleSubmit = async (e) => {
   e.preventDefault();
 
-  if (isSubmitting) {
+  if (isSubmittingRef.current) {
     return;
   }
 
@@ -69,6 +70,7 @@ const handleSubmit = async (e) => {
     }
 
 
+  isSubmittingRef.current = true;
   setIsSubmitting(true);
 
   try {
@@ -79,6 +81,7 @@ const handleSubmit = async (e) => {
     department: employee.department,
     salary: employee.salary,
     status: employee.status,
+    phone: employee.phone,
     location: employee.location,
     startDate: employee.startDate,
   })
@@ -89,6 +92,7 @@ const handleSubmit = async (e) => {
   } catch {
     toast.error('Unable to update employee. Please try again.');
   } finally {
+    isSubmittingRef.current = false;
     setIsSubmitting(false);
   }
 }
@@ -154,6 +158,9 @@ const handleSubmit = async (e) => {
               <option value="Full Stack">Full Stack</option>
               <option value="Testing">Testing</option>
               <option value="UI/UX">UI/UX</option>
+              <option value="QA">QA</option>
+              <option value="HR">HR</option>
+
             </select>
           </div>
 
@@ -186,6 +193,19 @@ const handleSubmit = async (e) => {
               
 
             </select>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="phone">Phone</label>
+
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              required
+              value={employee.phone}
+              onChange={handleChange}
+            />
           </div>
 
           <div className="form-group">

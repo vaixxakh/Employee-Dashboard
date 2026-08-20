@@ -132,3 +132,26 @@ export const deleteEmployee = async (id) => {
     throw new Error(`Failed to delete employee: ${error.message}`);
   }
 };
+
+export const getStatistics = async () => {
+  try {
+    const response = await fetch(`${API_BASE}/employees/statistics`);
+
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => null);
+      throw new Error(
+        errorBody?.message || `HTTP error! status: ${response.status}`
+      );
+    }
+
+    const result = await response.json();
+
+    if (!result.success || !result.data) {
+      throw new Error("Invalid API response");
+    }
+
+    return result.data;
+  } catch (error) {
+    throw new Error(`Failed to fetch statistics: ${error.message}`);
+  }
+};

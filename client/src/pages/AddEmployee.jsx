@@ -14,6 +14,7 @@ const initialEmployee = {
   department: "",
   salary: "",
   status: "",
+  phone: "",
   location: "",
     startDate: "",
 };
@@ -25,7 +26,8 @@ export default function AddEmployeePage({employees, addEmployee}) {
 
     const [employee, setEmployee] = React.useState(initialEmployee);
     const [ isSubmitting, setIsSubmitting ] = React.useState(false);
-    
+    const isSubmittingRef = React.useRef(false);
+
 
     const handleChange = (e) => {
         const {name, value} = e.target;
@@ -40,7 +42,7 @@ export default function AddEmployeePage({employees, addEmployee}) {
     const handleSubmit = async (e) => {
   e.preventDefault();
 
-  if (isSubmitting) {
+  if (isSubmittingRef.current) {
     return;
   }
 
@@ -52,6 +54,7 @@ export default function AddEmployeePage({employees, addEmployee}) {
   }
 
 
+  isSubmittingRef.current = true;
   setIsSubmitting(true);
 
   try {
@@ -61,6 +64,7 @@ export default function AddEmployeePage({employees, addEmployee}) {
     department: employee.department,
     salary: employee.salary,
     status: employee.status,
+    phone: employee.phone,
     location: employee.location,
     startDate: employee.startDate,
   })
@@ -72,6 +76,7 @@ export default function AddEmployeePage({employees, addEmployee}) {
   } catch {
     toast.error("Unable to add employee. Please try again.");
   } finally {
+    isSubmittingRef.current = false;
     setIsSubmitting(false);
   }
 };
@@ -170,6 +175,19 @@ export default function AddEmployeePage({employees, addEmployee}) {
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
             </select>
+          </div>
+          <div className="form-group">
+            <label htmlFor="phone">Phone</label>
+
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              placeholder="Enter 10-digit phone number"
+              value={employee.phone}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div className="form-group">
         <label htmlFor="location">Location</label>

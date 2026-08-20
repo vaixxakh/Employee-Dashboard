@@ -100,6 +100,7 @@ const employee = employees.find(
             />
       <section className="details panel">
         <div><span>Email</span><strong>{employee.email}</strong></div>
+        <div><span>Phone</span><strong>{employee.phone}</strong></div>
         <div><span>Salary</span><strong>{formatSalary(employee.salary)}</strong></div>
         <div><span>Location</span><strong>{employee.location}</strong></div>
         <div><span>Start date</span><strong>{convertToDateInputFormat(employee.startDate)}</strong></div>

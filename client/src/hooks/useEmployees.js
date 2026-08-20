@@ -51,7 +51,7 @@ const addEmployee = React.useCallback(
   async (employeeData) => {
     const createdEmployee = await createEmployee(employeeData)
 
-    if (!createdEmployee || !createdEmployee.id) {
+    if (!createdEmployee || (!createdEmployee.id && !createdEmployee._id)) {
       throw new Error('Invalid API response')
     }
 
@@ -68,7 +68,7 @@ const updateEmployeeById = React.useCallback(
   async (employeeId, employeeData) => {
     const updatedApiEmployee = await updateEmployee(employeeId, employeeData)
 
-    if (!updatedApiEmployee || !updatedApiEmployee.id) {
+    if (!updatedApiEmployee || (!updatedApiEmployee.id && !updatedApiEmployee._id)) {
       throw new Error('Invalid API response')
     }
 

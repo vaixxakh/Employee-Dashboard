@@ -59,6 +59,14 @@ export function validateEmployee(employee, employees, employeeId = null) {
     return 'Please select a start date.'
   }
 
+  const phone = (employee.phone || '').trim()
+  if (!phone) {
+    return 'Phone number is required.'
+  }
+  if (!/^[6-9]\d{9}$/.test(phone)) {
+    return 'Please enter a valid 10-digit phone number.'
+  }
+
   return null
 }
 
