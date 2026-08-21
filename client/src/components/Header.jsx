@@ -1,10 +1,21 @@
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
+
+import { useAuth } from '../hooks/useAuth'
 
 const navClass = ({ isActive }) => `nav-link${isActive ? ' active' : ''}`
 const dashboardNavClass = ({ isActive }) => `nav-link dashboard-nav-link${isActive ? ' active' : ''}`
 
 
 export default function Header({ totalEmployees }) {
+  const navigate = useNavigate()
+  const { user, isAuthenticated, logout } = useAuth()
+
+  const handleLogout = () => {
+    logout()
+
+    navigate('/login', { replace: true })
+  }
+
   return (
     <header className="topbar">
       <Link className="brand" to="/" aria-label="Employee Management Dashboard">
@@ -17,6 +28,20 @@ export default function Header({ totalEmployees }) {
           <NavLink className={navClass} to="/employees">Employees</NavLink>
         </nav>
         <span className="employee-count"><strong>{totalEmployees}</strong> Total Employees</span>
+        {isAuthenticated && (
+          <>
+            <span className="employee-count user-chip">
+              <strong>{user?.name}</strong>
+            </span>
+            <button
+              type="button"
+              className="logout-button"
+              onClick={handleLogout}
+            >
+              Logout
+            </button>
+          </>
+        )}
       </div>
     </header>
   )

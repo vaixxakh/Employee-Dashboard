@@ -3,12 +3,15 @@ import FilterLoader from './FilterLoader'
 import SearchLoader from './SearchLoader'
 import PageLoader from './PageLoader'
 import useDirectoryFilters from '../hooks/useDirectoryFilters'
+import { useAuth } from '../hooks/useAuth'
 import {FiPlus} from 'react-icons/fi';
 import { Link, useNavigate } from 'react-router-dom';
 
 const departments = ['All', 'Frontend', 'Backend', 'Testing', 'Full Stack','UI/UX', 'HR', 'QA']
 
 export default function EmployeeDirectoryPage({ employees, isDirectoryLoading, loadError, reloadEmployees }) {
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'Admin'
   const {
     department,
     status,
@@ -36,13 +39,15 @@ export default function EmployeeDirectoryPage({ employees, isDirectoryLoading, l
 
         <div className="page-heading-content">
           <p>Browse your organization's employee directory.</p>
-          <button
-            className="primary-button"
-            onClick={() => navigate("/employees/add")}
-          >
-            <FiPlus size={18} />
-            <span>Add Employee</span>
-          </button>
+          {isAdmin && (
+            <button
+              className="primary-button"
+              onClick={() => navigate("/employees/add")}
+            >
+              <FiPlus size={18} />
+              <span>Add Employee</span>
+            </button>
+          )}
           </div>
       </section>
 

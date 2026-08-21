@@ -7,9 +7,20 @@ import EmployeeDirectoryPage from './EmployeeDirectoryPage'
 import AddEmployee from '../pages/AddEmployee'
 import NotFoundPage from './NotFoundPage'
 import EditEmployee from '../pages/EditEmployee'
+import LoginPage from '../pages/LoginPage'
+import RegisterPage from '../pages/RegisterPage'
+import ProtectedRoute from './ProtectedRoute'
 
 function withLayout(content, totalEmployees) {
   return <AppLayout totalEmployees={totalEmployees}>{content}</AppLayout>
+}
+
+function withProtectedLayout(content, totalEmployees, roles) {
+  return (
+    <AppLayout totalEmployees={totalEmployees}>
+      <ProtectedRoute roles={roles}>{content}</ProtectedRoute>
+    </AppLayout>
+  )
 }
 
 export default function AppRoutes({ employees,  isDirectoryLoading, handleDeleteEmployee, loadError, reloadEmployees , addEmployee, updateEmployee}) {
@@ -26,35 +37,39 @@ export default function AppRoutes({ employees,  isDirectoryLoading, handleDelete
       <motion.div className="route-transition" key={location.pathname} transition={transition} {...animation}>
 
         <Routes location={location}>
-          <Route path="/" element={withLayout(<DashboardPage employees={employees} 
+          <Route path="/login" element={<LoginPage />} />
+
+          <Route path="/register" element={<RegisterPage />} />
+
+          <Route path="/" element={withProtectedLayout(<DashboardPage employees={employees} 
           isDirectoryLoading={isDirectoryLoading} />, totalEmployees)} />
 
           <Route path="/employees" 
-          element={withLayout(<EmployeeDirectoryPage
+          element={withProtectedLayout(<EmployeeDirectoryPage
            employees={employees} isDirectoryLoading={isDirectoryLoading} 
            loadError={loadError} reloadEmployees={reloadEmployees} />,
             totalEmployees)} />
 
           <Route path="/employees/:employeeId" 
-            element={withLayout(<EmployeeDetailsPage 
+            element={withProtectedLayout(<EmployeeDetailsPage 
             employees={employees} handleDeleteEmployee={handleDeleteEmployee} 
             isDirectoryLoading={isDirectoryLoading}/>, 
              totalEmployees)} />
 
           <Route path="/employees/add" 
-          element={withLayout(<AddEmployee 
+          element={withProtectedLayout(<AddEmployee 
             employees={employees}
             addEmployee={addEmployee}
              />,
-             totalEmployees)} />
+             totalEmployees, ['Admin'])} />
 
           <Route path="/employees/:employeeId/edit" 
-          element={withLayout(
+          element={withProtectedLayout(
           <EditEmployee
            employees={employees}
           updateEmployee={updateEmployee}
           isDirectoryLoading={isDirectoryLoading}/>,
-           totalEmployees)} />
+           totalEmployees, ['Admin'])} />
 
           <Route path="/not-found" element={withLayout(<NotFoundPage />,
            totalEmployees)} />

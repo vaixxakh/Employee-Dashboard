@@ -50,7 +50,7 @@ project-root/
 │   │   ├── middleware/
 |   |   ├── data/
 |   |   |   └── seedEmployees.js
-│   │   ├── model/
+│   │   ├── models/
 │   │   ├── routes/
 │   │   ├── app.js
 │   │   └── server.js

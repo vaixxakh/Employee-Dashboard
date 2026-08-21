@@ -10,6 +10,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { BrowserRouter } from 'react-router-dom'
 import { ToastContainer } from "react-toastify";
 import { useEmployees} from '../hooks/useEmployees'
+import { AuthProvider } from '../context/AuthContext.jsx'
 
 
 export default function App() {
@@ -39,7 +40,8 @@ const {
  
 
   return (
-    <BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
         <ToastContainer
         position="top-right"
         autoClose={2500}
@@ -68,6 +70,7 @@ const {
         loadError={loadError}
         reloadEmployees={reloadEmployees} />
       </div>
-    </BrowserRouter>
+      </BrowserRouter>
+    </AuthProvider>
   )
 }

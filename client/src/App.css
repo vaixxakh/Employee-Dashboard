@@ -821,3 +821,26 @@ main {
     transition-duration: .01ms !important;
   }
 }
+.user-chip strong {
+  color: #182233;
+}
+.logout-button {
+  padding: 8px 16px;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  background: #fff;
+  color: #344054;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .25s ease;
+}
+.logout-button:hover {
+  background: #ffebe9;
+  border-color: #f0b3ad;
+  color: #d53c3c;
+}
+.logout-button:active {
+  transform: scale(.96);
+}

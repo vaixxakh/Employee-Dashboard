@@ -9,12 +9,15 @@ import { formatSalary } from '../utils/formatSalary'
 import { convertToDateInputFormat } from '../utils/formatDate'
 
 import ConfirmModal from "./ConfirmModal";
+import { useAuth } from '../hooks/useAuth'
 
 
 export default function EmployeeDetailsPage({ employees, handleDeleteEmployee,   isDirectoryLoading,
  }) {
   const { employeeId } = useParams()
   const navigate = useNavigate();
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'Admin'
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
@@ -71,18 +74,22 @@ const employee = employees.find(
           <p>{employee.department}</p>
           <StatusBadge status={employee.status} />
         </div>
-          <button className="edit-emp" onClick={() => 
-            navigate(`/employees/${employee.id}/edit`)}
-            >Edit Employee</button>
+          {isAdmin && (
+            <button className="edit-emp" onClick={() => 
+              navigate(`/employees/${employee.id}/edit`)}
+              >Edit Employee</button>
+          )}
 
           
-            <button
-            className="delete-emp"
-              disabled={isDeleting}
-            onClick={() => setIsDeleteModalOpen(true)}
-            >
-            {isDeleting ? "Deleting..." : "Delete Employee"}
-          </button>
+            {isAdmin && (
+              <button
+              className="delete-emp"
+                disabled={isDeleting}
+              onClick={() => setIsDeleteModalOpen(true)}
+              >
+              {isDeleting ? "Deleting..." : "Delete Employee"}
+            </button>
+            )}
       </section>
       <ConfirmModal
               open={isDeleteModalOpen}
