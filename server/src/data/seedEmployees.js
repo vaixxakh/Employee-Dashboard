@@ -15,7 +15,7 @@ const employees = [
   },
   {
     name: "Anjali Nair",
-    email: "anjali.nair@example.com",
+    email: "anjali.nair@gmail.com",
     department: "Frontend",
     salary: 52000,
     status: "Active",

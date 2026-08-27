@@ -1,10 +1,11 @@
+import { Outlet } from 'react-router-dom'
 import Header from './Header'
 
-export default function AppLayout({ children, totalEmployees }) {
+export default function AppLayout() {
   return (
     <div className="app-shell">
-      <Header totalEmployees={totalEmployees} />
-      <main>{children}</main>
+      <Header />
+      <main><Outlet /></main>
     </div>
   )
 }

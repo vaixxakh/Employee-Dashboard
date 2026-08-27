@@ -9,24 +9,12 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import { BrowserRouter } from 'react-router-dom'
 import { ToastContainer } from "react-toastify";
-import { useEmployees} from '../hooks/useEmployees'
 import { AuthProvider } from '../context/AuthContext.jsx'
 
 
 export default function App() {
 
   const [isInitializing, setIsInitializing] = React.useState(true)
-
-const {
-  employees,
-  addEmployee,
-  updateEmployee,
-  isDirectoryLoading,
-  loadError,
-  reloadEmployees,
-  handleDeleteEmployee,
-
-} = useEmployees();
 
     React.useEffect(() => {
     const initializeTimer = window.setTimeout(
@@ -56,19 +44,11 @@ const {
       <FullScreenLoader isInitializing={isInitializing} />
       <div className={`app-content ${isInitializing 
         ? 'is-initializing' : 'is-ready'}`} 
-        aria-busy={isInitializing ||
-         isDirectoryLoading}>
+        aria-busy={isInitializing}>
           
         <ScrollToTop />
 
-        <AppRoutes 
-        employees={employees} 
-        addEmployee={addEmployee}
-        updateEmployee={updateEmployee}
-        handleDeleteEmployee={handleDeleteEmployee}
-        isDirectoryLoading={isDirectoryLoading}
-        loadError={loadError}
-        reloadEmployees={reloadEmployees} />
+        <AppRoutes />
       </div>
       </BrowserRouter>
     </AuthProvider>

@@ -10,10 +10,11 @@ import { convertToDateInputFormat } from '../utils/formatDate'
 
 import ConfirmModal from "./ConfirmModal";
 import { useAuth } from '../hooks/useAuth'
+import { useEmployeeData } from '../context/EmployeeContext'
 
 
-export default function EmployeeDetailsPage({ employees, handleDeleteEmployee,   isDirectoryLoading,
- }) {
+export default function EmployeeDetailsPage() {
+  const { employees = [], handleDeleteEmployee, isDirectoryLoading } = useEmployeeData() || {}
   const { employeeId } = useParams()
   const navigate = useNavigate();
   const { user } = useAuth()

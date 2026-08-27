@@ -1,14 +1,17 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../hooks/useAuth'
+import { useEmployeeData } from '../context/EmployeeContext'
 
 const navClass = ({ isActive }) => `nav-link${isActive ? ' active' : ''}`
 const dashboardNavClass = ({ isActive }) => `nav-link dashboard-nav-link${isActive ? ' active' : ''}`
 
 
-export default function Header({ totalEmployees }) {
+export default function Header() {
   const navigate = useNavigate()
   const { user, isAuthenticated, logout } = useAuth()
+  const employeeData = useEmployeeData()
+  const totalEmployees = employeeData?.employees?.length ?? 0
 
   const handleLogout = () => {
     logout()

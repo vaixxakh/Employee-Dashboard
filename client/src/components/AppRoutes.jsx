@@ -1,5 +1,6 @@
-import { Route, Routes, useLocation } from 'react-router-dom'
+import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+
 import AppLayout from './AppLayout'
 import DashboardPage from '../pages/DashboardPage'
 import EmployeeDetailsPage from './EmployeeDetailsPage'
@@ -10,23 +11,26 @@ import EditEmployee from '../pages/EditEmployee'
 import LoginPage from '../pages/LoginPage'
 import RegisterPage from '../pages/RegisterPage'
 import ProtectedRoute from './ProtectedRoute'
+import { EmployeeProvider } from '../context/EmployeeContext'
+import { useAuth } from '../hooks/useAuth'
 
-function withLayout(content, totalEmployees) {
-  return <AppLayout totalEmployees={totalEmployees}>{content}</AppLayout>
-}
-
-function withProtectedLayout(content, totalEmployees, roles) {
+function EmployeeProviderLayout() {
   return (
-    <AppLayout totalEmployees={totalEmployees}>
-      <ProtectedRoute roles={roles}>{content}</ProtectedRoute>
-    </AppLayout>
+    <EmployeeProvider>
+      <Outlet />
+    </EmployeeProvider>
   )
 }
 
-export default function AppRoutes({ employees,  isDirectoryLoading, handleDeleteEmployee, loadError, reloadEmployees , addEmployee, updateEmployee}) {
+function AdminOnly({ children }) {
+  const { user } = useAuth()
+  if (user?.role !== 'Admin') return <Navigate to="/employees" replace />
+  return children
+}
+
+export default function AppRoutes() {
   const location = useLocation()
   const reduceMotion = useReducedMotion()
-  const totalEmployees = employees.length
   const transition = { duration: reduceMotion ? 0 : 0.4, ease: [0.22, 1, 0.36, 1] }
   const animation = reduceMotion
     ? { initial: false, animate: { opacity: 1 }, exit: { opacity: 1 } }
@@ -41,42 +45,26 @@ export default function AppRoutes({ employees,  isDirectoryLoading, handleDelete
 
           <Route path="/register" element={<RegisterPage />} />
 
-          <Route path="/" element={withProtectedLayout(<DashboardPage employees={employees} 
-          isDirectoryLoading={isDirectoryLoading} />, totalEmployees)} />
+          <Route element={<ProtectedRoute />}>
+            <Route element={<EmployeeProviderLayout />}>
+              <Route element={<AppLayout />}>
+                <Route path="/" element={<DashboardPage />} />
 
-          <Route path="/employees" 
-          element={withProtectedLayout(<EmployeeDirectoryPage
-           employees={employees} isDirectoryLoading={isDirectoryLoading} 
-           loadError={loadError} reloadEmployees={reloadEmployees} />,
-            totalEmployees)} />
+                <Route path="/employees" element={<EmployeeDirectoryPage />} />
 
-          <Route path="/employees/:employeeId" 
-            element={withProtectedLayout(<EmployeeDetailsPage 
-            employees={employees} handleDeleteEmployee={handleDeleteEmployee} 
-            isDirectoryLoading={isDirectoryLoading}/>, 
-             totalEmployees)} />
+                <Route path="/employees/:employeeId" element={<EmployeeDetailsPage />} />
 
-          <Route path="/employees/add" 
-          element={withProtectedLayout(<AddEmployee 
-            employees={employees}
-            addEmployee={addEmployee}
-             />,
-             totalEmployees, ['Admin'])} />
+                <Route path="/employees/add" element={<AdminOnly><AddEmployee /></AdminOnly>} />
 
-          <Route path="/employees/:employeeId/edit" 
-          element={withProtectedLayout(
-          <EditEmployee
-           employees={employees}
-          updateEmployee={updateEmployee}
-          isDirectoryLoading={isDirectoryLoading}/>,
-           totalEmployees, ['Admin'])} />
+                <Route path="/employees/:employeeId/edit" element={<AdminOnly><EditEmployee /></AdminOnly>} />
+              </Route>
+            </Route>
+          </Route>
 
-          <Route path="/not-found" element={withLayout(<NotFoundPage />,
-           totalEmployees)} />
+          <Route path="/not-found" element={<NotFoundPage />} />
 
-          <Route path="*" element={withLayout(<NotFoundPage />,
-           totalEmployees)} />
-          
+          <Route path="*" element={<NotFoundPage />} />
+
         </Routes>
       </motion.div>
     </AnimatePresence>

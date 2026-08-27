@@ -5,6 +5,7 @@ import '../styles/addEmployee.css'
 import { Link, useNavigate} from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { validateEmployee } from '../utils/employeeValidation';
+import { useEmployeeData } from '../context/EmployeeContext';
 
 const initialEmployee = {
   id: "",
@@ -20,7 +21,8 @@ const initialEmployee = {
 };
 
 
-export default function AddEmployeePage({employees, addEmployee}) {
+export default function AddEmployeePage() {
+    const { employees = [], addEmployee } = useEmployeeData() || {}
 
     const navigate = useNavigate();
 

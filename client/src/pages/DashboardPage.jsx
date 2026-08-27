@@ -6,8 +6,10 @@ import AnimatedCounter from '../components/AnimatedCounter'
 import PageLoader from '../components/PageLoader'
 import { formatSalary } from '../utils/formatSalary'
 import { getStatistics } from '../services/userService'
+import { useEmployeeData } from '../context/EmployeeContext'
 
-export default function DashboardPage({employees, isDirectoryLoading}) {
+export default function DashboardPage() {
+  const { employees = [], isDirectoryLoading } = useEmployeeData() || {}
   const [stats, setStats] = React.useState(null);
   const [statsLoading, setStatsLoading] = React.useState(true);
 

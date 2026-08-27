@@ -4,12 +4,14 @@ import SearchLoader from './SearchLoader'
 import PageLoader from './PageLoader'
 import useDirectoryFilters from '../hooks/useDirectoryFilters'
 import { useAuth } from '../hooks/useAuth'
+import { useEmployeeData } from '../context/EmployeeContext'
 import {FiPlus} from 'react-icons/fi';
 import { Link, useNavigate } from 'react-router-dom';
 
 const departments = ['All', 'Frontend', 'Backend', 'Testing', 'Full Stack','UI/UX', 'HR', 'QA']
 
-export default function EmployeeDirectoryPage({ employees, isDirectoryLoading, loadError, reloadEmployees }) {
+export default function EmployeeDirectoryPage() {
+  const { employees = [], isDirectoryLoading, loadError, reloadEmployees } = useEmployeeData() || {}
   const { user } = useAuth()
   const isAdmin = user?.role === 'Admin'
   const {

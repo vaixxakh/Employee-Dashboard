@@ -4,12 +4,12 @@ import { Link, Navigate,  useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { convertToDateInputFormat } from '../utils/formatDate';
 import { validateEmployee } from '../utils/employeeValidation';
+import { useEmployeeData } from '../context/EmployeeContext';
 
 
 
-
-
-export default function EditEmployee({ employees, updateEmployee, isDirectoryLoading }) {
+export default function EditEmployee() {
+  const { employees = [], updateEmployee, isDirectoryLoading } = useEmployeeData() || {}
 
   const { employeeId } = useParams()
   const navigate = useNavigate()

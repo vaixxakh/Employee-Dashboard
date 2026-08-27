@@ -1,6 +1,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { searchEmployees, getEmployees } from '../services/userService'
+import { mapApiEmployeeToFrontend } from '../mappers/userMapper'
 
 const DEBOUNCE_DELAY = 500
 
@@ -57,7 +58,7 @@ export default function useDirectoryFilters(employees) {
     getEmployees(filters)
       .then((results) => {
         if (reqId === requestCounterRef.current) {
-          setFilterResults(results)
+          setFilterResults(results.map(mapApiEmployeeToFrontend))
           setLoadingType(null)
         }
       })
@@ -107,7 +108,7 @@ export default function useDirectoryFilters(employees) {
     searchEmployees(params, { signal: controller.signal })
       .then((results) => {
         if (reqId === requestCounterRef.current) {
-          setSearchResults(results)
+          setSearchResults(results.map(mapApiEmployeeToFrontend))
           setLoadingType(null)
         }
       })
