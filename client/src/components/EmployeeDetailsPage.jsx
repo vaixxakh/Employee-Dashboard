@@ -3,7 +3,7 @@ import React from 'react';
 import PageLoader from './PageLoader'
 import StatusBadge from './StatusBadge'
 
-import { Link, Navigate, useNavigate , useParams} from 'react-router-dom'
+import { Link, useNavigate , useParams} from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { formatSalary } from '../utils/formatSalary'
 import { convertToDateInputFormat } from '../utils/formatDate'
@@ -11,26 +11,69 @@ import { convertToDateInputFormat } from '../utils/formatDate'
 import ConfirmModal from "./ConfirmModal";
 import { useAuth } from '../hooks/useAuth'
 import { useEmployeeData } from '../context/EmployeeContext'
+import { getEmployeeById } from '../services/userService'
+import { mapApiEmployeeToFrontend } from '../mappers/userMapper'
 
 
 export default function EmployeeDetailsPage() {
-  const { employees = [], handleDeleteEmployee, isDirectoryLoading } = useEmployeeData() || {}
+  const { handleDeleteEmployee } = useEmployeeData() || {}
   const { employeeId } = useParams()
   const navigate = useNavigate();
   const { user } = useAuth()
   const isAdmin = user?.role === 'Admin'
 
+  const [employee, setEmployee] = React.useState(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [loadError, setLoadError] = React.useState(null);
+
   const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
 
-      if (isDirectoryLoading) {
+  const loadEmployee = React.useCallback(async () => {
+    setIsLoading(true);
+    setLoadError(null);
+
+    try {
+      const apiEmployee = await getEmployeeById(employeeId);
+      setEmployee(mapApiEmployeeToFrontend(apiEmployee));
+    } catch (error) {
+      setEmployee(null);
+      setLoadError(error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [employeeId]);
+
+  React.useEffect(() => {
+    loadEmployee();
+  }, [loadEmployee]);
+
+  if (isLoading) {
     return <PageLoader label="Loading employee details" />
   }
 
-const employee = employees.find(
-  (employee) => String(employee.id) === employeeId
-)
-  if (!employee) return <Navigate to="/employees" replace />
+  if (loadError || !employee) {
+    const errorMessage = String(loadError?.message || '').toLowerCase();
+    const isNotFound =
+      errorMessage.includes('not found') || errorMessage.includes('invalid id');
+
+    if (isNotFound) {
+      return (
+        <section className="empty">
+          <p className="eyebrow">404</p>
+          <h1>Employee not found</h1>
+          <Link className="primary-button" to="/employees">Back to employees</Link>
+        </section>
+      )
+    }
+
+    return (
+      <section className="panel-error">
+        <p>Unable to load employee details. Please try again.</p>
+        <button className="primary-button" onClick={loadEmployee}>Try Again</button>
+      </section>
+    )
+  }
 
   const handleDelete = async () => {
 

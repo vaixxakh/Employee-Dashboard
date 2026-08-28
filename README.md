@@ -181,13 +181,96 @@ http://localhost:5000/api
 
 | Method | Endpoint | Description |
 |---|---|---|
-| GET | `/api/employees` | Get all employees |
+| GET | `/api/employees` | Get paginated employees (`page`, `limit`, `sort`) |
 | GET | `/api/employees/:id` | Get an employee by MongoDB ID |
 | POST | `/api/employees` | Create a new employee |
 | PUT | `/api/employees/:id` | Update an employee |
 | DELETE | `/api/employees/:id` | Delete an employee |
 | GET | `/api/employees/search` | Search employees |
 | GET | `/api/employees/statistics` | Get employee statistics |
+
+---
+
+# Pagination
+
+The employee list and search endpoints are paginated so the frontend never loads the entire employee collection at once.
+
+## List Endpoint
+
+```http
+GET /api/employees?page=1&limit=10
+```
+
+### Query Parameters
+
+| Parameter | Default | Validation |
+|---|---|---|
+| `page` | `1` | Integer `>= 1` |
+| `limit` | `10` | Integer between `1` and `100` |
+| `sort` | none | Optional. Prefix `-` for descending (e.g. `-createdAt`), no prefix for ascending. Whitelisted fields: `name`, `email`, `department`, `salary`, `status`, `location`, `startDate`, `createdAt`, `updatedAt` |
+
+Invalid `page` or `limit` values return `400 Bad Request`.
+
+### Example
+
+```http
+GET /api/employees?page=2&limit=10
+```
+
+### How Pagination Works
+
+With `limit=10`:
+
+```http
+GET /api/employees?page=1&limit=10
+```
+→ Returns the first 10 employees.
+
+```http
+GET /api/employees?page=2&limit=10
+```
+→ Skips the first 10 employees and returns the next 10 employees.
+
+```http
+GET /api/employees?page=3&limit=10
+```
+→ Skips the first 20 employees and returns the next 10 employees.
+
+The number of records skipped is calculated as `skip = (page - 1) * limit`, so:
+
+- `page` 1 starts from the first record
+- `page` 2 skips the first `limit` records
+- `page` 3 skips the first `2 × limit` records
+
+### Pagination Response
+
+Every paginated endpoint returns the same metadata shape:
+
+```json
+{
+  "success": true,
+  "data": [],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "totalEmployees": 25,
+    "totalPages": 3,
+    "hasNextPage": true,
+    "hasPreviousPage": false
+  }
+}
+```
+
+| Field | Description |
+|---|---|
+| `page` | Current page number |
+| `limit` | Records per page |
+| `totalEmployees` | Total matching records in the database (not just the current page) |
+| `totalPages` | Total number of pages |
+| `hasNextPage` | Whether a next page exists |
+| `hasPreviousPage` | Whether a previous page exists |
+
+Object IDs are order-preserving, so `-createdAt` (or default natural order combined with `skip`/`limit`) is used to keep pagination stable across page requests.
 
 ---
 
@@ -234,6 +317,17 @@ GET /api/employees/search?name=rahul&department=Backend
 ```
 
 When multiple parameters are provided, employees matching all specified conditions are returned.
+
+## Search with Pagination
+
+The search endpoint supports the same pagination query parameters:
+
+```http
+GET /api/employees/search?query=rahul&page=1&limit=10
+GET /api/employees/search?query=rahul&department=Backend&status=Active&page=2&limit=10
+```
+
+Invalid `page` or `limit` values return `400 Bad Request`. Paginated search responses include the same `pagination` metadata object as the list endpoint.
 
 ---
 
@@ -282,11 +376,13 @@ Content-Type: application/json
 
 ---
 
-## 2. Get All Employees
+## 2. Get Employees (Paginated)
 
 ```http
-GET /api/employees
+GET /api/employees?page=1&limit=10
 ```
+
+`page` defaults to `1` and `limit` defaults to `10`. See the Pagination section for validation rules.
 
 No request body is required.
 
@@ -358,7 +454,13 @@ GET /api/employees/search?email=rahul@gmail.com
 GET /api/employees/search?department=Backend
 ```
 
----
+### By Query with Pagination
+
+```http
+GET /api/employees/search?query=rahul&page=1&limit=10
+```
+
+Every search request accepts the same `page` and `limit` parameters as the list endpoint.
 
 ## 7. Get Employee Statistics
 
@@ -372,7 +474,7 @@ No request body is required.
 
 # Response Examples
 
-## 1. Get All Employees
+## 1. Get Employees (Paginated)
 
 ```json
 {
@@ -391,7 +493,15 @@ No request body is required.
       "createdAt": "2026-08-20T10:30:00.000Z",
       "updatedAt": "2026-08-20T10:30:00.000Z"
     }
-  ]
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "totalEmployees": 25,
+    "totalPages": 3,
+    "hasNextPage": true,
+    "hasPreviousPage": false
+  }
 }
 ```
 
@@ -510,7 +620,15 @@ No request body is required.
       "location": "Kochi",
       "startDate": "2026-08-20T00:00:00.000Z"
     }
-  ]
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "totalEmployees": 25,
+    "totalPages": 3,
+    "hasNextPage": true,
+    "hasPreviousPage": false
+  }
 }
 ```
 
@@ -718,3 +836,4 @@ Changes made through the API persist after restarting the server.
 - Replace example MongoDB IDs with actual employee IDs when making API requests.
 - The statistics endpoint calculates values dynamically from MongoDB.
 - The search endpoint performs filtering through MongoDB rather than fetching all employees and filtering them in JavaScript.
+- The employee list and search endpoints are paginated; the frontend requests only the current page of employees.

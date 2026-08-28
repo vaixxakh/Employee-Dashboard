@@ -1,45 +1,77 @@
 import React from 'react'
 
-import { Link, Navigate,  useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { convertToDateInputFormat } from '../utils/formatDate';
 import { validateEmployee } from '../utils/employeeValidation';
 import { useEmployeeData } from '../context/EmployeeContext';
+import { getEmployeeById } from '../services/userService';
+import { mapApiEmployeeToFrontend } from '../mappers/userMapper';
 
 
 
 export default function EditEmployee() {
-  const { employees = [], updateEmployee, isDirectoryLoading } = useEmployeeData() || {}
+  const { employees = [], updateEmployee } = useEmployeeData() || {}
 
   const { employeeId } = useParams()
   const navigate = useNavigate()
-  
+
   const [employee, setEmployee] = React.useState(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [loadError, setLoadError] = React.useState(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const isSubmittingRef = React.useRef(false);
 
-  const employeeToEdit = employees.find(
-    (employee) => String(employee.id) === String(employeeId)
-  )
-  React.useEffect(() => {
-    if(employeeToEdit) {
-        const employeeWithFormattedDate = {
-          ...employeeToEdit,
-          startDate: convertToDateInputFormat(employeeToEdit.startDate)
-        };
-        setEmployee(employeeWithFormattedDate);
+  const loadEmployee = React.useCallback(async () => {
+    setIsLoading(true);
+    setLoadError(null);
+
+    try {
+      const apiEmployee = await getEmployeeById(employeeId);
+      const mappedEmployee = mapApiEmployeeToFrontend(apiEmployee);
+
+      setEmployee({
+        ...mappedEmployee,
+        startDate: convertToDateInputFormat(mappedEmployee.startDate),
+      });
+    } catch (error) {
+      setEmployee(null);
+      setLoadError(error);
+    } finally {
+      setIsLoading(false);
     }
-  }, [employeeToEdit]);
+  }, [employeeId]);
+
+  React.useEffect(() => {
+    loadEmployee();
+  }, [loadEmployee]);
 
 
- if (isDirectoryLoading) {
+ if (isLoading) {
   return <p>Loading employee...</p>
 };
-if (!employeeToEdit) {
-  return <Navigate to="/employees" replace />
-}
-if (!employee) {
-  return <p>Loading employee...</p>
+
+if (loadError || !employee) {
+  const errorMessage = String(loadError?.message || '').toLowerCase();
+  const isNotFound =
+    errorMessage.includes('not found') || errorMessage.includes('invalid id');
+
+  if (isNotFound) {
+    return (
+      <section className="empty">
+        <p className="eyebrow">404</p>
+        <h1>Employee not found</h1>
+        <Link className="primary-button" to="/employees">Back to employees</Link>
+      </section>
+    )
+  }
+
+  return (
+    <section className="panel-error">
+      <p>Unable to load employee. Please try again.</p>
+      <button className="primary-button" onClick={loadEmployee}>Try Again</button>
+    </section>
+  )
 }
 
 

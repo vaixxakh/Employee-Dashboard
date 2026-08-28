@@ -11,7 +11,7 @@ export default function Header() {
   const navigate = useNavigate()
   const { user, isAuthenticated, logout } = useAuth()
   const employeeData = useEmployeeData()
-  const totalEmployees = employeeData?.employees?.length ?? 0
+  const totalEmployees = employeeData?.pagination?.totalEmployees ?? 0
 
   const handleLogout = () => {
     logout()

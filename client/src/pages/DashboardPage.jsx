@@ -5,13 +5,15 @@ import MetricCard from '../components/MetricCard'
 import AnimatedCounter from '../components/AnimatedCounter'
 import PageLoader from '../components/PageLoader'
 import { formatSalary } from '../utils/formatSalary'
-import { getStatistics } from '../services/userService'
-import { useEmployeeData } from '../context/EmployeeContext'
+import { getEmployees, getStatistics } from '../services/userService'
+import { mapApiEmployeeToFrontend } from '../mappers/userMapper'
 
 export default function DashboardPage() {
-  const { employees = [], isDirectoryLoading } = useEmployeeData() || {}
   const [stats, setStats] = React.useState(null);
   const [statsLoading, setStatsLoading] = React.useState(true);
+
+  const [recentEmployees, setRecentEmployees] = React.useState([]);
+  const [isRecentLoading, setIsRecentLoading] = React.useState(true);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -42,6 +44,31 @@ export default function DashboardPage() {
     }
 
     fetchStats();
+
+    return () => { cancelled = true; };
+  }, []);
+
+  React.useEffect(() => {
+    let cancelled = false;
+
+    async function fetchRecentEmployees() {
+      try {
+        const result = await getEmployees({}, { page: 1, limit: 4, sort: '-createdAt' });
+        if (!cancelled) {
+          setRecentEmployees(result.data.map(mapApiEmployeeToFrontend));
+        }
+      } catch {
+        if (!cancelled) {
+          setRecentEmployees([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsRecentLoading(false);
+        }
+      }
+    }
+
+    fetchRecentEmployees();
 
     return () => { cancelled = true; };
   }, []);
@@ -89,8 +116,8 @@ export default function DashboardPage() {
           </div>
           <Link to="/employees">See all -&gt;</Link>
         </div>
-        {isDirectoryLoading && <PageLoader label="Loading employee overview" />}
-        <EmployeeList employees={employees.slice(0, 4)} isDirectoryLoading={isDirectoryLoading} />
+        {isRecentLoading && <PageLoader label="Loading employee overview" />}
+        <EmployeeList employees={recentEmployees} isDirectoryLoading={isRecentLoading} />
       </section>
     </>
   )

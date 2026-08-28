@@ -2,6 +2,7 @@ import EmployeeList from './EmployeeList'
 import FilterLoader from './FilterLoader'
 import SearchLoader from './SearchLoader'
 import PageLoader from './PageLoader'
+import PaginationControls from './PaginationControls'
 import useDirectoryFilters from '../hooks/useDirectoryFilters'
 import { useAuth } from '../hooks/useAuth'
 import { useEmployeeData } from '../context/EmployeeContext'
@@ -11,25 +12,48 @@ import { Link, useNavigate } from 'react-router-dom';
 const departments = ['All', 'Frontend', 'Backend', 'Testing', 'Full Stack','UI/UX', 'HR', 'QA']
 
 export default function EmployeeDirectoryPage() {
-  const { employees = [], isDirectoryLoading, loadError, reloadEmployees } = useEmployeeData() || {}
+  const { employees = [], pagination = {}, currentPage = 1, setCurrentPage, isDirectoryLoading, loadError, reloadEmployees } = useEmployeeData() || {}
   const { user } = useAuth()
   const isAdmin = user?.role === 'Admin'
   const {
     department,
     status,
     filteredEmployees,
+    filterPagination,
+    searchPagination,
+    setSearchPage,
     isLoading: isFilterLoading,
     loadingType,
     searchTerm,
     updateDepartment,
     updateStatus,
     updateSearch,
-  } = useDirectoryFilters(employees)
+  } = useDirectoryFilters(employees, currentPage, setCurrentPage, pagination)
 
   const navigate = useNavigate();
 
   const hasEmployees = employees.length > 0
   const hasFilteredResults = filteredEmployees.length > 0
+  const hasActiveFilters = department !== 'All' || status !== 'All'
+  const hasActiveSearch = Boolean(searchTerm.trim())
+
+  const displayPagination =
+    hasActiveSearch && searchPagination
+      ? searchPagination
+      : hasActiveFilters && filterPagination
+        ? filterPagination
+        : pagination
+
+  const showPaginationControls =
+    !isDirectoryLoading &&
+    !loadError &&
+    !isFilterLoading &&
+    (displayPagination.totalEmployees || 0) > 0 &&
+    (hasActiveSearch
+      ? Boolean(searchPagination)
+      : hasActiveFilters
+        ? hasFilteredResults
+        : hasEmployees)
 
   return (
     <>
@@ -99,6 +123,16 @@ export default function EmployeeDirectoryPage() {
 
         {!isDirectoryLoading && !loadError && !isFilterLoading && hasFilteredResults && <div className="results-transition"><EmployeeList employees={filteredEmployees} /></div>}
 
+        {showPaginationControls && (
+          <PaginationControls
+            currentPage={displayPagination.page}
+            totalPages={displayPagination.totalPages}
+            totalEmployees={displayPagination.totalEmployees}
+            hasNextPage={displayPagination.hasNextPage}
+            hasPreviousPage={displayPagination.hasPreviousPage}
+            onPageChange={hasActiveSearch ? setSearchPage : setCurrentPage}
+          />
+        )}
       </section>
     </>
   )

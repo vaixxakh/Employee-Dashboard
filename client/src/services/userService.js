@@ -1,6 +1,6 @@
 import { apiFetch } from "./apiClient";
 
-export const getEmployees = async (filters = {}) => {
+export const getEmployees = async (filters = {}, pagination = {}) => {
   try {
     const searchParams = new URLSearchParams();
 
@@ -12,13 +12,17 @@ export const getEmployees = async (filters = {}) => {
       searchParams.append("department", filters.department);
     }
 
-    const queryString = searchParams.toString();
+    const page = pagination.page ?? 1;
+    const limit = pagination.limit ?? 10;
 
-    const url = queryString
-      ? `/employees?${queryString}`
-      : "/employees";
+    searchParams.append("page", page);
+    searchParams.append("limit", limit);
 
-    const response = await apiFetch(url);
+    if (pagination.sort) {
+      searchParams.append("sort", pagination.sort);
+    }
+
+    const response = await apiFetch(`/employees?${searchParams.toString()}`);
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -32,10 +36,39 @@ export const getEmployees = async (filters = {}) => {
       );
     }
 
-    return result.data;
+    return {
+      data: result.data,
+      pagination: result.pagination,
+    };
   } catch (error) {
     throw new Error(
       `Failed to fetch employees: ${error.message}`
+    );
+  }
+};
+
+export const getEmployeeById = async (id) => {
+  try {
+    const response = await apiFetch(`/employees/${id}`);
+
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => null);
+
+      throw new Error(
+        errorBody?.message || `HTTP error! status: ${response.status}`
+      );
+    }
+
+    const result = await response.json();
+
+    if (!result.success || !result.data) {
+      throw new Error("Invalid API response");
+    }
+
+    return result.data;
+  } catch (error) {
+    throw new Error(
+      `Failed to fetch employee: ${error.message}`
     );
   }
 };
@@ -98,7 +131,7 @@ export const updateEmployee = async (id, employeeData) => {
   }
 };
 
-export const searchEmployees = async (params, options = {}) => {
+export const searchEmployees = async (params = {}, pagination = {}, options = {}) => {
   try {
     const searchParams = new URLSearchParams();
 
@@ -108,6 +141,12 @@ export const searchEmployees = async (params, options = {}) => {
       }
     }
 
+    const page = pagination.page ?? 1;
+    const limit = pagination.limit ?? 10;
+
+    searchParams.append("page", page);
+    searchParams.append("limit", limit);
+
     const response = await apiFetch(
       `/employees/search?${searchParams.toString()}`,
       {
@@ -116,16 +155,23 @@ export const searchEmployees = async (params, options = {}) => {
     );
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorBody = await response.json().catch(() => null);
+
+      throw new Error(
+        errorBody?.message || `HTTP error! status: ${response.status}`
+      );
     }
 
     const result = await response.json();
 
-    if (!result.success || !Array.isArray(result.data)) {
+    if (!result.success || !Array.isArray(result.data) || !result.pagination) {
       throw new Error("Invalid API response");
     }
 
-    return result.data;
+    return {
+      data: result.data,
+      pagination: result.pagination,
+    };
   } catch (error) {
     if (error.name === "AbortError") {
       throw error;

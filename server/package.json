@@ -6,6 +6,7 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "seed": "node src/data/seedEmployees.js",
+    "seed:employees": "node src/data/seedEmployeesSafe.js",
     "seed:admin": "node src/data/seedAdmin.js"
   },
   "dependencies": {

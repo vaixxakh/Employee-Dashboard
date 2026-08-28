@@ -1,8 +1,37 @@
 const Employee = require("../models/Employee");
 
+const SORTABLE_FIELDS = new Set([
+  "name",
+  "email",
+  "department",
+  "salary",
+  "status",
+  "location",
+  "startDate",
+  "createdAt",
+  "updatedAt",
+]);
+
 async function listEmployees(req, res, next ) {
   try {
-    const { status, department } = req.query;
+    const { status, department, page: rawPage, limit: rawLimit, sort: rawSort } = req.query;
+
+    const page = rawPage !== undefined ? Number(rawPage) : 1;
+    const limit = rawLimit !== undefined ? Number(rawLimit) : 10;
+
+    if (rawPage !== undefined && (!Number.isInteger(page) || page < 1)) {
+      return res.status(400).json({
+        success: false,
+        message: "page must be an integer greater than 0",
+      });
+    }
+
+    if (rawLimit !== undefined && (!Number.isInteger(limit) || limit < 1 || limit > 100)) {
+      return res.status(400).json({
+        success: false,
+        message: "limit must be an integer between 1 and 100",
+      });
+    }
 
     const filter = {};
 
@@ -14,11 +43,40 @@ async function listEmployees(req, res, next ) {
       filter.department = department;
     }
 
-    const employees = await Employee.find(filter);
+    const sort = {};
+
+    if (rawSort !== undefined && rawSort !== "") {
+      const sortedField = rawSort.startsWith("-") ? rawSort.slice(1) : rawSort;
+      const sortedDirection = rawSort.startsWith("-") ? -1 : 1;
+
+      if (!SORTABLE_FIELDS.has(sortedField)) {
+        return res.status(400).json({
+          success: false,
+          message: "sort must reference a valid field",
+        });
+      }
+
+      sort[sortedField] = sortedDirection;
+    }
+
+    const totalEmployees = await Employee.countDocuments(filter);
+    const totalPages = Math.ceil(totalEmployees / limit);
+    const employees = await Employee.find(filter)
+      .sort(sort)
+      .skip((page - 1) * limit)
+      .limit(limit);
 
       return res.status(200).json({
         success: true,
         data: employees,
+        pagination: {
+          page,
+          limit,
+          totalEmployees,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPreviousPage: page > 1,
+        },
       });
   } catch (error) {
     next(error);
@@ -213,7 +271,26 @@ async function searchEmployeeList(req, res, next) {
       department,
       status,
       query,
+      page: rawPage,
+      limit: rawLimit,
     } = req.query;
+
+    const page = rawPage !== undefined ? Number(rawPage) : 1;
+    const limit = rawLimit !== undefined ? Number(rawLimit) : 10;
+
+    if (rawPage !== undefined && (!Number.isInteger(page) || page < 1)) {
+      return res.status(400).json({
+        success: false,
+        message: "page must be an integer greater than 0",
+      });
+    }
+
+    if (rawLimit !== undefined && (!Number.isInteger(limit) || limit < 1 || limit > 100)) {
+      return res.status(400).json({
+        success: false,
+        message: "limit must be an integer between 1 and 100",
+      });
+    }
 
     const filter = {};
 
@@ -265,11 +342,23 @@ async function searchEmployeeList(req, res, next) {
       ];
     }
 
-    const employees = await Employee.find(filter);
+    const totalEmployees = await Employee.countDocuments(filter);
+    const totalPages = Math.ceil(totalEmployees / limit);
+    const employees = await Employee.find(filter)
+      .skip((page - 1) * limit)
+      .limit(limit);
 
     return res.status(200).json({
       success: true,
       data: employees,
+      pagination: {
+        page,
+        limit,
+        totalEmployees,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
     });
   } catch (error) {
     next(error);

@@ -9,32 +9,72 @@ import {
 
 import { mapApiEmployeeToFrontend } from '../mappers/userMapper'
 
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 10;
+
+const INITIAL_PAGINATION = {
+  page: DEFAULT_PAGE,
+  limit: DEFAULT_LIMIT,
+  totalEmployees: 0,
+  totalPages: 0,
+  hasNextPage: false,
+  hasPreviousPage: false,
+};
+
 let inFlightEmployeesRequest = null;
 
-function requestEmployees() {
-  if (!inFlightEmployeesRequest) {
-    inFlightEmployeesRequest = getEmployees().finally(() => {
-      inFlightEmployeesRequest = null;
-    });
+function requestEmployees(pagination = {}) {
+  const page = pagination.page ?? DEFAULT_PAGE;
+  const limit = pagination.limit ?? DEFAULT_LIMIT;
+  const requestKey = `${page}:${limit}`;
+
+  if (!inFlightEmployeesRequest || inFlightEmployeesRequest.requestKey !== requestKey) {
+    const promise = getEmployees({}, { page, limit })
+      .then((result) => {
+        if (!result.pagination) {
+          throw new Error('Invalid API response: missing pagination metadata');
+        }
+
+        return {
+          data: result.data.map(mapApiEmployeeToFrontend),
+          pagination: result.pagination,
+        };
+      })
+      .finally(() => {
+        if (inFlightEmployeesRequest && inFlightEmployeesRequest.promise === promise) {
+          inFlightEmployeesRequest = null;
+        }
+      });
+
+    inFlightEmployeesRequest = { requestKey, promise };
   }
 
-  return inFlightEmployeesRequest;
+  return inFlightEmployeesRequest.promise;
 }
 
 export const useEmployees = () => {
 
       const [employees, setEmployees] = React.useState([]);
+      const [pagination, setPagination] = React.useState(INITIAL_PAGINATION);
       const [isDirectoryLoading, setIsDirectoryLoading] = React.useState(true);
       const [loadError, setLoadError] = React.useState(false);
 
-     const reloadEmployees = React.useCallback(async () => {
+      const paginationRef = React.useRef(pagination);
+      paginationRef.current = pagination;
+
+     const reloadEmployees = React.useCallback(async (paginationRequest = null) => {
         setIsDirectoryLoading(true);
         setLoadError(false);
 
         try {
-          const apiEmployees = await requestEmployees();
-          const mapped = apiEmployees.map(mapApiEmployeeToFrontend);
+          const { data: mapped, pagination: newPagination } = await requestEmployees(
+            paginationRequest || {
+              page: paginationRef.current.page,
+              limit: paginationRef.current.limit,
+            }
+          );
           setEmployees(mapped);
+          setPagination(newPagination);
         } catch  {
           setLoadError(true);
         } finally {
@@ -47,6 +87,16 @@ export const useEmployees = () => {
 
   }, [reloadEmployees]);
 
+const setCurrentPage = React.useCallback(
+  (page) => {
+    return reloadEmployees({
+      page,
+      limit: paginationRef.current.limit,
+    })
+  },
+  [reloadEmployees]
+);
+
 const addEmployee = React.useCallback(
   async (employeeData) => {
     const createdEmployee = await createEmployee(employeeData)
@@ -57,11 +107,14 @@ const addEmployee = React.useCallback(
 
     const mappedEmployee = mapApiEmployeeToFrontend(createdEmployee)
 
-    setEmployees((prev) => [mappedEmployee, ...prev])
+    await reloadEmployees({
+      page: paginationRef.current.page,
+      limit: paginationRef.current.limit,
+    })
 
     return mappedEmployee
   },
-  []
+  [reloadEmployees]
 );
 
 const updateEmployeeById = React.useCallback(
@@ -74,17 +127,14 @@ const updateEmployeeById = React.useCallback(
 
     const mappedEmployee = mapApiEmployeeToFrontend(updatedApiEmployee)
 
-    setEmployees((prev) =>
-      prev.map((employee) =>
-        String(employee.id) === String(employeeId)
-          ? mappedEmployee
-          : employee
-      )
-    )
+    await reloadEmployees({
+      page: paginationRef.current.page,
+      limit: paginationRef.current.limit,
+    })
 
     return mappedEmployee
   },
-  []
+  [reloadEmployees]
 );
 
   const handleDeleteEmployee = React.useCallback(async (employeeId) => {
@@ -94,19 +144,23 @@ const updateEmployeeById = React.useCallback(
         return false
       }
 
-      setEmployees((prev) =>
-        prev.filter((employee) => employee.id !== employeeId)
-      )
+      await reloadEmployees({
+        page: paginationRef.current.page,
+        limit: paginationRef.current.limit,
+      })
 
       return true
-    }, [])
+    }, [reloadEmployees])
 
     return {
         employees,
+        pagination,
+        currentPage: pagination.page,
 
         isDirectoryLoading,
         loadError,
         reloadEmployees,
+        setCurrentPage,
 
         addEmployee,
         updateEmployee: updateEmployeeById,
