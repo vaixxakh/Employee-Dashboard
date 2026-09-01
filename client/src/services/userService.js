@@ -205,6 +205,66 @@ export const deleteEmployee = async (id) => {
   }
 };
 
+export const uploadEmployeeImage = async (id, file) => {
+  try {
+    const formData = new FormData();
+    formData.append("profileImage", file);
+
+    const response = await apiFetch(`/employees/${id}/profile-image`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => null);
+
+      throw new Error(
+        errorBody?.message || `HTTP error! status: ${response.status}`
+      );
+    }
+
+    const result = await response.json();
+
+    if (!result.success || !result.data) {
+      throw new Error("Invalid API response");
+    }
+
+    return result.data;
+  } catch (error) {
+    throw new Error(
+      `Failed to upload profile image: ${error.message}`
+    );
+  }
+};
+
+export const deleteEmployeeImage = async (id) => {
+  try {
+    const response = await apiFetch(`/employees/${id}/profile-image`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => null);
+
+      throw new Error(
+        errorBody?.message || `HTTP error! status: ${response.status}`
+      );
+    }
+
+    const result = await response.json();
+
+    if (!result.success || !result.data) {
+      throw new Error("Invalid API response");
+    }
+
+    return result.data;
+  } catch (error) {
+    throw new Error(
+      `Failed to delete profile image: ${error.message}`
+    );
+  }
+};
+
 export const getStatistics = async () => {
   try {
     const response = await apiFetch("/employees/statistics");

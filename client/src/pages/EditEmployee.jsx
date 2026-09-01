@@ -7,11 +7,12 @@ import { validateEmployee } from '../utils/employeeValidation';
 import { useEmployeeData } from '../context/EmployeeContext';
 import { getEmployeeById } from '../services/userService';
 import { mapApiEmployeeToFrontend } from '../mappers/userMapper';
+import { formatFileSize, getProfileImageUrl, validateProfileImage } from '../utils/profileImage';
 
 
 
 export default function EditEmployee() {
-  const { employees = [], updateEmployee } = useEmployeeData() || {}
+  const { employees = [], updateEmployee, uploadProfileImage } = useEmployeeData() || {}
 
   const { employeeId } = useParams()
   const navigate = useNavigate()
@@ -21,6 +22,12 @@ export default function EditEmployee() {
   const [loadError, setLoadError] = React.useState(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const isSubmittingRef = React.useRef(false);
+  const [isUploadingProfileImage, setIsUploadingProfileImage] = React.useState(false);
+  const isUploadingRef = React.useRef(false);
+  const [selectedProfileImage, setSelectedProfileImage] = React.useState(null);
+  const [profileImagePreview, setProfileImagePreview] = React.useState("");
+  const [profileImageError, setProfileImageError] = React.useState("");
+  const fileInputRef = React.useRef(null);
 
   const loadEmployee = React.useCallback(async () => {
     setIsLoading(true);
@@ -45,6 +52,14 @@ export default function EditEmployee() {
   React.useEffect(() => {
     loadEmployee();
   }, [loadEmployee]);
+
+  React.useEffect(() => {
+    return () => {
+      if (profileImagePreview) {
+        URL.revokeObjectURL(profileImagePreview);
+      }
+    };
+  }, [profileImagePreview]);
 
 
  if (isLoading) {
@@ -85,7 +100,50 @@ if (loadError || !employee) {
     }))
     
   };
-  
+
+  const clearProfileImageSelection = () => {
+    if (profileImagePreview) {
+      URL.revokeObjectURL(profileImagePreview);
+    }
+
+    setSelectedProfileImage(null);
+    setProfileImagePreview("");
+    setProfileImageError("");
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleProfileImageChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+
+    if (!file) {
+      return;
+    }
+
+    const result = validateProfileImage(file);
+
+    if (!result.valid) {
+      setProfileImageError(result.message);
+      toast.error(result.message);
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      return;
+    }
+
+    setProfileImageError("");
+
+    if (profileImagePreview) {
+      URL.revokeObjectURL(profileImagePreview);
+    }
+
+    setSelectedProfileImage(file);
+    setProfileImagePreview(URL.createObjectURL(file));
+  };
+
 
 const handleSubmit = async (e) => {
   e.preventDefault();
@@ -118,8 +176,24 @@ const handleSubmit = async (e) => {
     startDate: employee.startDate,
   })
 
-    toast.success('Employee updated successfully!');
+    if (selectedProfileImage && !isUploadingRef.current) {
+      isUploadingRef.current = true;
+      setIsUploadingProfileImage(true);
 
+      try {
+        await uploadProfileImage(employeeId, selectedProfileImage);
+        toast.success('Employee updated successfully!');
+      } catch {
+        toast.error('Employee updated, but profile image upload failed.');
+      } finally {
+        isUploadingRef.current = false;
+        setIsUploadingProfileImage(false);
+      }
+    } else {
+      toast.success('Employee updated successfully!');
+    }
+
+    clearProfileImageSelection();
     navigate('/employees');
   } catch {
     toast.error('Unable to update employee. Please try again.');
@@ -266,6 +340,53 @@ const handleSubmit = async (e) => {
             />
           </div>
 
+          <div className="form-group full-width profile-image-field">
+            <label>Profile Image</label>
+            <p className="profile-image-hint">Allowed formats: JPG, PNG, WEBP</p>
+
+            <div className="profile-image-preview">
+              {profileImagePreview ? (
+                <img src={profileImagePreview} alt="Profile image preview" />
+              ) : getProfileImageUrl(employee.profileImage) ? (
+                <img src={getProfileImageUrl(employee.profileImage)} alt="Employee profile image" />
+              ) : (
+                <div className="profile-image-placeholder">No image selected</div>
+              )}
+            </div>
+
+            {selectedProfileImage && (
+              <div className="profile-image-meta">
+                <span className="profile-image-name">{selectedProfileImage.name}</span>
+                <span className="profile-image-size">{formatFileSize(selectedProfileImage.size)}</span>
+              </div>
+            )}
+
+            <div className="profile-image-actions">
+              <input
+                ref={fileInputRef}
+                type="file"
+                id="profileImage"
+                name="profileImage"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleProfileImageChange}
+              />
+
+              {selectedProfileImage && (
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={clearProfileImageSelection}
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+
+          {profileImageError && (
+            <p className="profile-image-error">{profileImageError}</p>
+          )}
+          </div>
+
           <div className="form-actions">
             <button
               type="button"
@@ -278,9 +399,10 @@ const handleSubmit = async (e) => {
             <button
               type="submit"
               className="primary-button"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isUploadingProfileImage}
+              aria-busy={isUploadingProfileImage}
             >
-              {isSubmitting ? 'Updating...' : 'Update Employee'}
+              {isUploadingProfileImage ? 'Uploading...' : isSubmitting ? 'Updating...' : 'Update Employee'}
             </button>
           </div>
 

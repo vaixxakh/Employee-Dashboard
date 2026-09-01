@@ -5,6 +5,8 @@ import {
   createEmployee,
   updateEmployee,
   deleteEmployee,
+  uploadEmployeeImage,
+  deleteEmployeeImage,
 } from '../services/userService'
 
 import { mapApiEmployeeToFrontend } from '../mappers/userMapper'
@@ -152,6 +154,46 @@ const updateEmployeeById = React.useCallback(
       return true
     }, [reloadEmployees])
 
+  const uploadProfileImage = React.useCallback(
+    async (employeeId, file) => {
+      const updatedApiEmployee = await uploadEmployeeImage(employeeId, file);
+
+      if (!updatedApiEmployee || (!updatedApiEmployee.id && !updatedApiEmployee._id)) {
+        throw new Error('Invalid API response')
+      }
+
+      const mappedEmployee = mapApiEmployeeToFrontend(updatedApiEmployee);
+
+      await reloadEmployees({
+        page: paginationRef.current.page,
+        limit: paginationRef.current.limit,
+      })
+
+      return mappedEmployee;
+    },
+    [reloadEmployees]
+  );
+
+  const deleteProfileImage = React.useCallback(
+    async (employeeId) => {
+      const updatedApiEmployee = await deleteEmployeeImage(employeeId);
+
+      if (!updatedApiEmployee || (!updatedApiEmployee.id && !updatedApiEmployee._id)) {
+        throw new Error('Invalid API response')
+      }
+
+      const mappedEmployee = mapApiEmployeeToFrontend(updatedApiEmployee);
+
+      await reloadEmployees({
+        page: paginationRef.current.page,
+        limit: paginationRef.current.limit,
+      })
+
+      return mappedEmployee;
+    },
+    [reloadEmployees]
+  );
+
     return {
         employees,
         pagination,
@@ -164,6 +206,8 @@ const updateEmployeeById = React.useCallback(
 
         addEmployee,
         updateEmployee: updateEmployeeById,
+        uploadProfileImage,
+        deleteProfileImage,
         handleDeleteEmployee,
     }
 }

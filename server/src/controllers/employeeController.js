@@ -1,4 +1,40 @@
+const fs = require("fs");
+const path = require("path");
+
 const Employee = require("../models/Employee");
+
+const EMPLOYEE_UPLOAD_DIRECTORY = path.join(
+  __dirname,
+  "..",
+  "..",
+  "uploads",
+  "employees"
+);
+
+function resolveSafeFilename(storedPath) {
+  const storagePrefix = "/uploads/employees/";
+  let filename = storedPath;
+
+  if (typeof storedPath === "string" && storedPath.startsWith(storagePrefix)) {
+    filename = storedPath.slice(storagePrefix.length);
+  }
+
+  const invalid =
+    typeof storedPath !== "string" ||
+    !storedPath.startsWith(storagePrefix) ||
+    !filename ||
+    filename === "." ||
+    filename === ".." ||
+    filename.includes("..") ||
+    filename.includes("/") ||
+    filename.includes("\\");
+
+  if (invalid) {
+    return null;
+  }
+
+  return path.join(EMPLOYEE_UPLOAD_DIRECTORY, filename);
+}
 
 const SORTABLE_FIELDS = new Set([
   "name",
@@ -204,6 +240,113 @@ async function removeEmployee(req, res, next) {
   }
 }
 
+async function uploadEmployeeProfileImage(req, res, next) {
+  try {
+    const employee = await Employee.findById(req.params.id);
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Profile image is required.",
+      });
+    }
+
+    const oldSafePath = resolveSafeFilename(employee.profileImage);
+
+    employee.profileImage = `/uploads/employees/${req.file.filename}`;
+
+    const updatedEmployee = await employee.save();
+
+    if (oldSafePath) {
+      const newSafePath = resolveSafeFilename(updatedEmployee.profileImage);
+      const oldPath = path.resolve(oldSafePath);
+      const newPath = path.resolve(newSafePath);
+
+      if (oldPath !== newPath) {
+        fs.unlink(oldSafePath, (err) => {
+          if (err && err.code !== "ENOENT") {
+            console.error("Error:", err.message);
+          }
+        });
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: updatedEmployee,
+    });
+  } catch (error) {
+    if (req.file) {
+      const uploaded = resolveSafeFilename(`/uploads/employees/${req.file.filename}`);
+      fs.unlink(uploaded, (err) => {
+        if (err && err.code !== "ENOENT") {
+          console.error("Error:", err.message);
+        }
+      });
+    }
+
+    next(error);
+  }
+}
+
+async function deleteEmployeeProfileImage(req, res, next) {
+  try {
+    const employee = await Employee.findById(req.params.id);
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    const storedPath = employee.profileImage || "";
+
+    if (!storedPath) {
+      return res.status(200).json({
+        success: true,
+        message: "No profile image to delete.",
+        data: employee,
+      });
+    }
+
+    const resolvedPath = resolveSafeFilename(storedPath);
+
+    if (!resolvedPath) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid profile image path",
+      });
+    }
+
+    employee.profileImage = "";
+
+    const updatePromise = employee.save();
+
+    fs.unlink(resolvedPath, (err) => {
+      if (err && err.code !== "ENOENT") {
+        console.error("Error:", err.message);
+      }
+    });
+
+    const updatedEmployee = await updatePromise;
+
+    return res.status(200).json({
+      success: true,
+      data: updatedEmployee,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function getStatistics(req, res, next) {
   try {
     const result = await Employee.aggregate([
@@ -372,6 +515,8 @@ module.exports = {
   createEmployee,
   editEmployee,
   removeEmployee,
+  uploadEmployeeProfileImage,
+  deleteEmployeeProfileImage,
   getStatistics,
   searchEmployeeList,
 };

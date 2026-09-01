@@ -8,9 +8,15 @@ const {
   createEmployee,
   editEmployee,
   removeEmployee,
+  uploadEmployeeProfileImage,
+  deleteEmployeeProfileImage,
   getStatistics,
   searchEmployeeList,
 } = require("../controllers/employeeController");
+
+const { uploadEmployeeImage } = require("../middleware/uploadMiddleware");
+
+const { validateImageContent } = require("../middleware/imageContentValidator");
 
 const router = express.Router();
 
@@ -29,5 +35,19 @@ router.post("/employees", authorize("Admin"), createEmployee);
 router.put("/employees/:id", authorize("Admin"), editEmployee);
 
 router.delete("/employees/:id", authorize("Admin"), removeEmployee);
+
+router.post(
+  "/employees/:id/profile-image",
+  authorize("Admin"),
+  uploadEmployeeImage.single("profileImage"),
+  validateImageContent,
+  uploadEmployeeProfileImage
+);
+
+router.delete(
+  "/employees/:id/profile-image",
+  authorize("Admin"),
+  deleteEmployeeProfileImage
+);
 
 module.exports = router;

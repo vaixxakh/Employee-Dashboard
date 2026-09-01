@@ -7,6 +7,7 @@ import { Link, useNavigate , useParams} from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { formatSalary } from '../utils/formatSalary'
 import { convertToDateInputFormat } from '../utils/formatDate'
+import { getProfileImageUrl } from '../utils/profileImage'
 
 import ConfirmModal from "./ConfirmModal";
 import { useAuth } from '../hooks/useAuth'
@@ -25,6 +26,7 @@ export default function EmployeeDetailsPage() {
   const [employee, setEmployee] = React.useState(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [loadError, setLoadError] = React.useState(null);
+  const [imageError, setImageError] = React.useState(false);
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
@@ -36,6 +38,7 @@ export default function EmployeeDetailsPage() {
     try {
       const apiEmployee = await getEmployeeById(employeeId);
       setEmployee(mapApiEmployeeToFrontend(apiEmployee));
+      setImageError(false);
     } catch (error) {
       setEmployee(null);
       setLoadError(error);
@@ -105,13 +108,25 @@ export default function EmployeeDetailsPage() {
 
 }
 
+  const profileImageUrl = getProfileImageUrl(employee.profileImage)
+
   return (
     <>
       <Link className="back-link" to="/employees">&larr; Back to employees</Link>
       <section className="profile panel">
 
 
-        <div className="avatar large">{employee.initials}</div>
+        <div className="avatar large">
+          {profileImageUrl && !imageError ? (
+            <img
+              src={profileImageUrl}
+              alt={`${employee.name} profile`}
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            employee.initials
+          )}
+        </div>
         <div>
           <p className="eyebrow">EMPLOYEE PROFILE</p>
           <h1>{employee.name}</h1>

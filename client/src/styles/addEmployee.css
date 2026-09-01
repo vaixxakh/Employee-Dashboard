@@ -23,6 +23,78 @@
   grid-column: 1 / -1;
 }
 
+.profile-image-field {
+  padding-top: 4px;
+}
+
+.profile-image-hint {
+  margin: -4px 0 12px;
+  color: #98a2b3;
+  font-size: 13px;
+}
+
+.profile-image-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 120px;
+  border: 1px solid #d8dde7;
+  border-radius: 14px;
+  background: #f9fafb;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.profile-image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.profile-image-placeholder {
+  color: #98a2b3;
+  font-size: 13px;
+  text-align: center;
+  padding: 8px;
+}
+
+.profile-image-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #344054;
+}
+
+.profile-image-name {
+  font-weight: 500;
+}
+
+.profile-image-size {
+  color: #667085;
+}
+
+.profile-image-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-image-actions input[type="file"] {
+  padding: 10px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.profile-image-error {
+  margin-top: 10px;
+  color: #d92d20;
+  font-size: 13px;
+}
+
 .add-employee-form label {
   margin-bottom: 8px;
   color: #344054;

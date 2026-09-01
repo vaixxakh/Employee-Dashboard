@@ -6,6 +6,7 @@ import { Link, useNavigate} from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { validateEmployee } from '../utils/employeeValidation';
 import { useEmployeeData } from '../context/EmployeeContext';
+import { formatFileSize, validateProfileImage } from '../utils/profileImage';
 
 const initialEmployee = {
   id: "",
@@ -22,13 +23,19 @@ const initialEmployee = {
 
 
 export default function AddEmployeePage() {
-    const { employees = [], addEmployee } = useEmployeeData() || {}
+    const { employees = [], addEmployee, uploadProfileImage } = useEmployeeData() || {}
 
     const navigate = useNavigate();
 
     const [employee, setEmployee] = React.useState(initialEmployee);
     const [ isSubmitting, setIsSubmitting ] = React.useState(false);
     const isSubmittingRef = React.useRef(false);
+    const [isUploadingProfileImage, setIsUploadingProfileImage] = React.useState(false);
+    const isUploadingRef = React.useRef(false);
+    const [selectedProfileImage, setSelectedProfileImage] = React.useState(null);
+    const [profileImagePreview, setProfileImagePreview] = React.useState("");
+    const [profileImageError, setProfileImageError] = React.useState("");
+    const fileInputRef = React.useRef(null);
 
 
     const handleChange = (e) => {
@@ -39,6 +46,57 @@ export default function AddEmployeePage() {
             [name]:  name === "salary" ? Number(value) : value
         }));
     };
+
+    const clearProfileImageSelection = () => {
+        if (profileImagePreview) {
+            URL.revokeObjectURL(profileImagePreview);
+        }
+
+        setSelectedProfileImage(null);
+        setProfileImagePreview("");
+        setProfileImageError("");
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
+    };
+
+    const handleProfileImageChange = (e) => {
+        const file = e.target.files && e.target.files[0];
+
+        if (!file) {
+            return;
+        }
+
+        const result = validateProfileImage(file);
+
+        if (!result.valid) {
+            setProfileImageError(result.message);
+            toast.error(result.message);
+
+            if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+            }
+            return;
+        }
+
+        setProfileImageError("");
+
+        if (profileImagePreview) {
+            URL.revokeObjectURL(profileImagePreview);
+        }
+
+        setSelectedProfileImage(file);
+        setProfileImagePreview(URL.createObjectURL(file));
+    };
+
+    React.useEffect(() => {
+        return () => {
+            if (profileImagePreview) {
+                URL.revokeObjectURL(profileImagePreview);
+            }
+        };
+    }, [profileImagePreview]);
 
 
     const handleSubmit = async (e) => {
@@ -60,7 +118,7 @@ export default function AddEmployeePage() {
   setIsSubmitting(true);
 
   try {
-    await addEmployee({
+    const createdEmployee = await addEmployee({
     name: employee.name.trim(),
     email: employee.email.trim(),
     department: employee.department,
@@ -69,11 +127,29 @@ export default function AddEmployeePage() {
     phone: employee.phone,
     location: employee.location,
     startDate: employee.startDate,
-  })
+    })
 
-    toast.success("Employee added successfully!");
+    const createdEmployeeId = createdEmployee?.id || createdEmployee?._id;
+
+    if (selectedProfileImage && createdEmployeeId && !isUploadingRef.current) {
+      isUploadingRef.current = true;
+      setIsUploadingProfileImage(true);
+
+      try {
+        await uploadProfileImage(createdEmployeeId, selectedProfileImage);
+        toast.success("Employee added successfully!");
+      } catch {
+        toast.error("Employee added, but profile image upload failed.");
+      } finally {
+        isUploadingRef.current = false;
+        setIsUploadingProfileImage(false);
+      }
+    } else {
+      toast.success("Employee added successfully!");
+    }
 
     setEmployee(initialEmployee);
+    clearProfileImageSelection();
     navigate("/employees");
   } catch {
     toast.error("Unable to add employee. Please try again.");
@@ -217,6 +293,51 @@ export default function AddEmployeePage() {
         />
         </div>
 
+        <div className="form-group full-width profile-image-field">
+          <label>Profile Image</label>
+          <p className="profile-image-hint">Allowed formats: JPG, PNG, WEBP</p>
+
+          <div className="profile-image-preview">
+            {profileImagePreview ? (
+              <img src={profileImagePreview} alt="Profile image preview" />
+            ) : (
+              <div className="profile-image-placeholder">No image selected</div>
+            )}
+          </div>
+
+          {selectedProfileImage && (
+            <div className="profile-image-meta">
+              <span className="profile-image-name">{selectedProfileImage.name}</span>
+              <span className="profile-image-size">{formatFileSize(selectedProfileImage.size)}</span>
+            </div>
+          )}
+
+          <div className="profile-image-actions">
+            <input
+              ref={fileInputRef}
+              type="file"
+              id="profileImage"
+              name="profileImage"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleProfileImageChange}
+            />
+
+            {selectedProfileImage && (
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={clearProfileImageSelection}
+              >
+                Remove
+              </button>
+            )}
+          </div>
+
+          {profileImageError && (
+            <p className="profile-image-error">{profileImageError}</p>
+          )}
+        </div>
+
         <div className="form-actions">
         <button
             type="button"
@@ -229,9 +350,10 @@ export default function AddEmployeePage() {
         <button
             type="submit"
             className="primary-button"
-            disabled={isSubmitting}  
+            disabled={isSubmitting || isUploadingProfileImage}
+            aria-busy={isUploadingProfileImage}
         >
-            {isSubmitting ? 'Adding...' : 'Add Employee'}
+            {isUploadingProfileImage ? 'Uploading...' : isSubmitting ? 'Adding...' : 'Add Employee'}
         </button>
         </div>
         </form>

@@ -17,6 +17,8 @@ A full-stack Employee Management Dashboard with a React (Vite) frontend and a No
 - Express.js
 - Mongoose
 - MongoDB
+- Multer
+- file-type
 - CORS
 - dotenv
 
@@ -54,6 +56,8 @@ project-root/
 │   │   ├── routes/
 │   │   ├── app.js
 │   │   └── server.js
+│   ├── uploads/
+│   │   └── employees/            # Uploaded profile images (git-ignored)
 │   └── package.json
 │
 ├── .gitignore
@@ -188,6 +192,8 @@ http://localhost:5000/api
 | DELETE | `/api/employees/:id` | Delete an employee |
 | GET | `/api/employees/search` | Search employees |
 | GET | `/api/employees/statistics` | Get employee statistics |
+| POST | `/api/employees/:id/profile-image` | Upload a profile image for an employee |
+| DELETE | `/api/employees/:id/profile-image` | Delete an employee's profile image |
 
 ---
 
@@ -343,8 +349,115 @@ Invalid `page` or `limit` values return `400 Bad Request`. Paginated search resp
 | `phone` | String | Yes | 10 digits starting with 6–9 |
 | `location` | String | Yes | Trimmed |
 | `startDate` | Date | Yes | Valid date |
+| `profileImage` | String | No | Path to the stored profile image; defaults to `""` |
 | `createdAt` | Date | Auto | Managed by Mongoose timestamps |
 | `updatedAt` | Date | Auto | Managed by Mongoose timestamps |
+
+---
+
+# Employee Profile Image Upload
+
+Employees can have a single profile image. The image is uploaded and stored on the server filesystem, while MongoDB stores only the path reference to the file.
+
+## How File Upload Works
+
+1. An admin selects a profile image from the Employee Add/Edit form.
+2. The frontend validates the selected file type and size before upload.
+3. In the browser, the selected image is kept as a `File` object and previewed using `URL.createObjectURL()`.
+4. On form submission, the employee is first created or updated through the standard employee endpoints.
+5. The selected image is then uploaded using `multipart/form-data`.
+6. The backend receives the file through **Multer**.
+7. The uploaded file is validated both by its **MIME type** and by its **actual file signature/content**.
+8. A server-generated unique filename is used for storage.
+9. The file is stored on the server filesystem.
+10. Only the generated `/uploads/employees/<filename>` path is stored in MongoDB.
+11. The image is served through the `/uploads` static route.
+12. When replacing an existing image, the old image file is deleted from the filesystem.
+13. When deleting an image, the database path is cleared and the file is removed from the filesystem.
+
+## Allowed File Types
+
+The profile image upload accepts the following image formats:
+
+| Format | MIME type |
+|---|---|
+| JPG / JPEG | `image/jpeg` |
+| PNG | `image/png` |
+| WEBP | `image/webp` |
+
+Actual file content/signature validation is also performed on the uploaded file. The file's real content is checked, so the declared MIME type alone is not trusted as proof of file type.
+
+## Maximum File Size
+
+- **Maximum:** 5 MB
+- **Exact backend limit:** `5 * 1024 * 1024` bytes
+
+Files larger than this limit are rejected.
+
+## Upload Endpoint
+
+```http
+POST /api/employees/:id/profile-image
+```
+
+Requirements:
+
+- Authentication required
+- Admin role required
+- Request must use `multipart/form-data`
+- File field name: `profileImage`
+
+### Example
+
+```http
+POST /api/employees/65f000000000000000000001/profile-image
+Content-Type: multipart/form-data
+```
+
+Form data field:
+
+| Field name | Type | Description |
+|---|---|---|
+| `profileImage` | File | The image file to upload for the employee |
+
+## Delete Endpoint
+
+```http
+DELETE /api/employees/:id/profile-image
+```
+
+Requirements:
+
+- Authentication required
+- Admin role required
+- Deletes the stored profile image and clears `Employee.profileImage`
+
+## Authentication Requirement
+
+- Profile image upload/delete requires authentication.
+- Only users with the **Admin** role are authorized to upload or delete profile images.
+- Unauthenticated requests return **401**.
+- Authenticated, non-admin users return **403**.
+
+## Where Files Are Stored
+
+```text
+server/uploads/employees/
+```
+
+- Files are stored on the server filesystem.
+- The directory is exposed through the `/uploads` static route.
+- Filenames are generated server-side using a timestamp + UUID combination.
+- Original filenames are not used for storage.
+- The uploads directory is git-ignored.
+
+## Why Images Are Not Stored Directly in MongoDB
+
+- MongoDB stores only the image **path** as a `String`.
+- Image binary/Base64 data is not stored in the Employee document.
+- This keeps employee documents smaller and avoids unnecessarily increasing database size.
+- The filesystem and static serving are used for image delivery.
+- The database acts as the reference to the stored file rather than holding the image itself.
 
 ---
 
@@ -469,6 +582,53 @@ GET /api/employees/statistics
 ```
 
 No request body is required.
+
+---
+
+## 8. Upload Employee Profile Image
+
+### Request
+
+```http
+POST /api/employees/65f000000000000000000001/profile-image
+Content-Type: multipart/form-data
+```
+
+The request body contains the image file in the `profileImage` field. See the [Employee Profile Image Upload](#employee-profile-image-upload) section for file type and size requirements.
+
+### Response
+
+```json
+{
+  "success": true,
+  "message": "Profile image uploaded successfully",
+  "data": {
+    "_id": "65f000000000000000000001",
+    "name": "Rahul Kumar",
+    "email": "rahul@example.com",
+    "profileImage": "/uploads/employees/1785345600000-6f2c4a9e-3a5b-4c0d-9e1f-2b8a7c6d5e4f.jpg",
+    "createdAt": "2026-08-20T10:30:00.000Z",
+    "updatedAt": "2026-08-20T11:00:00.000Z"
+  }
+}
+```
+
+---
+
+## 9. Delete Employee Profile Image
+
+```http
+DELETE /api/employees/65f000000000000000000001/profile-image
+```
+
+### Response
+
+```json
+{
+  "success": true,
+  "message": "Profile image deleted successfully"
+}
+```
 
 ---
 
@@ -725,6 +885,107 @@ The standard error response format is:
 
 ---
 
+## Unauthorized
+
+### HTTP Status
+
+```text
+401 Unauthorized
+```
+
+### Response
+
+```json
+{
+  "success": false,
+  "message": "Not authorized, token failed"
+}
+```
+
+Returned when a request is made without a valid authentication token, including profile image upload and delete requests.
+
+---
+
+## Forbidden
+
+### HTTP Status
+
+```text
+403 Forbidden
+```
+
+### Response
+
+```json
+{
+  "success": false,
+  "message": "Not authorized as admin"
+}
+```
+
+Returned when an authenticated, non-admin user attempts an admin-only action such as profile image upload or delete.
+
+---
+
+## Invalid Image Type
+
+### HTTP Status
+
+```text
+400 Bad Request
+```
+
+### Response
+
+```json
+{
+  "success": false,
+  "message": "Only JPG, PNG and WEBP images are allowed."
+}
+```
+
+---
+
+## Invalid Image Content
+
+### HTTP Status
+
+```text
+400 Bad Request
+```
+
+### Response
+
+```json
+{
+  "success": false,
+  "message": "Only valid JPG, PNG and WEBP images are allowed."
+}
+```
+
+Returned when the uploaded file's declared MIME type does not match its actual file content/signature.
+
+---
+
+## Image Size Exceeded
+
+### HTTP Status
+
+```text
+400 Bad Request
+```
+
+### Response
+
+```json
+{
+  "success": false,
+  "message": "Image size must be less than 5MB"
+}
+```
+
+---
+
 ## Employee Not Found
 
 ### HTTP Status
@@ -837,3 +1098,5 @@ Changes made through the API persist after restarting the server.
 - The statistics endpoint calculates values dynamically from MongoDB.
 - The search endpoint performs filtering through MongoDB rather than fetching all employees and filtering them in JavaScript.
 - The employee list and search endpoints are paginated; the frontend requests only the current page of employees.
+- Profile image upload and delete require an authenticated admin user and are restricted to JPG, PNG, and WEBP files up to 5 MB.
+- Profile images are stored on the server filesystem under `server/uploads/employees/`; MongoDB stores only the path reference.

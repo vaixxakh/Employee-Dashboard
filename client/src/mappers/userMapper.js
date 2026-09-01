@@ -9,6 +9,7 @@ export const mapApiEmployeeToFrontend = (employee) => {
     phone: employee.phone || "",
     startDate: employee.startDate || "",
     location: employee.location || "",
+    profileImage: employee.profileImage || "",
     initials:
       employee.initials ||
       employee.name
