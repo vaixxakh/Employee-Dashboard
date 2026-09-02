@@ -1,7 +1,9 @@
-function notFound(req, res, next) {
-  const error = new Error("Not found");
-  error.statusCode = 404;
-  next(error);
+function notFound(req, res, _next) {
+  return res.status(404).json({
+    success: false,
+    message: "Route not found",
+    code: "ROUTE_NOT_FOUND",
+  });
 }
 
 module.exports = { notFound };

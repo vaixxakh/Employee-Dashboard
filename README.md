@@ -2,17 +2,19 @@
 
 A full-stack Employee Management Dashboard with a React (Vite) frontend and a Node.js/Express REST API backend using MongoDB and Mongoose for persistent employee data.
 
+The backend uses **centralized error handling** (custom `AppError`, `asyncHandler`, a global `errorMiddleware`, and a `notFound` fallback) and a **consistent JSON response format** for both success and error responses across all API endpoints.
+
 ## Tech Stack
 
-### Frontend
-- React 19
+### Frontend (`client/`)
+- React
 - React Router
 - Vite
 - Framer Motion
 - React Toastify
 - React Icons
 
-### Backend
+### Backend (`server/`)
 - Node.js
 - Express.js
 - Mongoose
@@ -21,6 +23,8 @@ A full-stack Employee Management Dashboard with a React (Vite) frontend and a No
 - file-type
 - CORS
 - dotenv
+- bcryptjs
+- jsonwebtoken
 
 ### Development Tools
 - Nodemon
@@ -32,32 +36,53 @@ A full-stack Employee Management Dashboard with a React (Vite) frontend and a No
 
 ```text
 project-root/
-├── client/                       # React frontend
+├── client/                       # React frontend (ESM, Vite)
 │   ├── src/
 │   │   ├── components/
-│   │   ├── pages/
+│   │   ├── context/
 │   │   ├── hooks/
-│   │   ├── services/
 │   │   ├── mappers/
+│   │   ├── pages/
+│   │   ├── services/
+│   │   ├── styles/
 │   │   ├── utils/
-│   │   ├── data/
-│   │   └── styles/
+│   │   ├── App.css
+│   │   ├── App.jsx
+│   │   ├── index.css
+│   │   └── main.jsx
+│   ├── .env                       # Client environment (VITE_API_URL)
 │   ├── package.json
 │   └── vite.config.js
 │
-├── server/                       # Express REST API
+├── server/                       # Express REST API (CommonJS)
 │   ├── src/
 │   │   ├── config/
+│   │   │   └── db.js
 │   │   ├── controllers/
+│   │   │   ├── authController.js
+│   │   │   └── employeeController.js
+│   │   ├── data/
+│   │   │   ├── seedAdmin.js
+│   │   │   └── seedEmployees.js
 │   │   ├── middleware/
-|   |   ├── data/
-|   |   |   └── seedEmployees.js
+│   │   │   ├── AppError.js
+│   │   │   ├── asyncHandler.js
+│   │   │   ├── authMiddleware.js
+│   │   │   ├── errorMiddleware.js
+│   │   │   ├── imageContentValidator.js
+│   │   │   ├── notFound.js
+│   │   │   └── uploadMiddleware.js
 │   │   ├── models/
+│   │   │   ├── Employee.js
+│   │   │   └── User.js
 │   │   ├── routes/
+│   │   │   ├── authRoutes.js
+│   │   │   └── employeeRoutes.js
 │   │   ├── app.js
 │   │   └── server.js
 │   ├── uploads/
 │   │   └── employees/            # Uploaded profile images (git-ignored)
+│   ├── .env                       # Server environment variables
 │   └── package.json
 │
 ├── .gitignore
@@ -66,9 +91,16 @@ project-root/
 
 ---
 
+## Prerequisites
+
+- **Node.js** and **npm** (a recent LTS version of Node.js)
+- **MongoDB** — a running MongoDB instance or an Atlas connection string is required for the backend to start.
+
+---
+
 ## Installation
 
-The project contains separate frontend and backend applications.
+The project contains separate frontend and backend applications, each with its own `package.json`.
 
 ### Backend
 
@@ -79,8 +111,6 @@ npm install
 
 ### Frontend
 
-Open another terminal:
-
 ```bash
 cd client
 npm install
@@ -90,23 +120,41 @@ npm install
 
 ## Environment Variables
 
-Create a `.env` file inside the `server/` directory.
+### Server (`server/.env`)
 
-Example:
+The backend requires a `.env` file in the `server/` directory. Create one from the placeholders below:
 
 ```env
 PORT=5000
 MONGODBURI=your_mongodb_connection_string
+JWT_SECRET=your_secret_key
+JWT_EXPIRES_IN=1d
+ADMIN_NAME=Admin Name
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=your_admin_password
 ```
 
-### Environment Variables
+| Variable | Required | Description |
+|---|---|---:|
+| `PORT` | No | Port on which the Express server runs (default `5000`) |
+| `MONGODBURI` | Yes | MongoDB connection string |
+| `JWT_SECRET` | Yes | Secret used to sign and verify JWT tokens |
+| `JWT_EXPIRES_IN` | No | JWT expiry (default `1d`) |
+| `ADMIN_NAME` | Yes* | Name of the seeded Admin user |
+| `ADMIN_EMAIL` | Yes* | Email of the seeded Admin user |
+| `ADMIN_PASSWORD` | Yes* | Password of the seeded Admin user |
 
-| Variable | Description |
-|---|---|
-| `PORT` | Port on which the Express server runs |
-| `MONGODBURI` | MongoDB connection string |
+\* Required only when running `npm run seed:admin`.
 
-> **Security:** Never commit your real MongoDB connection string, password, API keys, or other credentials to version control. The `.env` file is excluded through `.gitignore`.
+### Client (`client/.env`)
+
+The frontend reads the API base URL from `VITE_API_URL` (defaults to `http://localhost:5000/api`):
+
+```env
+VITE_API_URL=http://localhost:5000/api
+```
+
+> **Security:** Never commit your real MongoDB connection string, password, JWT secret, API keys, or other credentials to version control. The `.env` files are excluded via `.gitignore`.
 
 ---
 
@@ -116,16 +164,25 @@ The backend and frontend should run simultaneously in separate terminals.
 
 ### Terminal 1 — Backend
 
+Start the server:
+
 ```bash
 cd server
 npm start
 ```
 
-For development with automatic restart:
+For development with automatic restart (Nodemon):
 
 ```bash
 cd server
 npm run dev
+```
+
+Build the backend API during development:
+
+```bash
+cd server
+npm run build
 ```
 
 The backend runs on:
@@ -141,35 +198,46 @@ cd client
 npm run dev
 ```
 
-The frontend runs on:
+The frontend (Vite dev server) runs on:
 
 ```text
 http://localhost:5173
 ```
 
+Other frontend scripts:
+
+```bash
+npm run build     # Production build
+npm run lint      # Run Oxlint
+npm run preview   # Preview the production build
+```
+
 ---
 
-## Seed Data
+## Seeding Data
 
-To seed the database with sample employee data:
+### Seed sample employees
 
+```bash
 cd server
 npm run seed
+```
 
 The seed script clears the existing employee data and inserts the sample employees into MongoDB.
 
-Employee records can be created through:
+Employee records can also be created through:
 
 - The frontend employee creation form
-- The REST API using `POST /api/employees`
+- The REST API using `POST /api/employees` (see request examples below)
 
-Example:
+### Seed an Admin user
 
-```http
-POST /api/employees
+```bash
+cd server
+npm run seed:admin
 ```
 
-See the request examples below for the required request body.
+This creates an Admin user from the `ADMIN_NAME`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` environment variables. It requires those three variables to be set and does nothing if an Admin user already exists.
 
 ---
 
@@ -181,19 +249,145 @@ Base API URL:
 http://localhost:5000/api
 ```
 
+## Response Format
+
+All API responses follow a consistent format.
+
+### Success
+
+```json
+{
+  "success": true,
+  "message": "...",
+  "data": ...
+}
+```
+
+`data` is omitted on some actions (e.g. a plain confirmation), and paginated endpoints include an additional `pagination` object **alongside** `data` (not inside it).
+
+### Error
+
+```json
+{
+  "success": false,
+  "message": "...",
+  "code": "..."
+}
+```
+
+Every error response includes a stable `code` for programmatic handling (except unexpected `500 Internal Server Error` responses, which do not include a `code`).
+
 ## API Endpoints
 
-| Method | Endpoint | Description |
+| Method | Endpoint | Description | Auth | Role |
+|---|---|---|---|---|
+| POST | `/api/auth/register` | Register a new user | Public | — |
+| POST | `/api/auth/login` | Log in and receive a JWT token | Public | — |
+| GET | `/api/employees` | Get paginated employees (`page`, `limit`, `sort`, `status`, `department`) | Protected | any |
+| GET | `/api/employees/search` | Search employees (`name`, `email`, `department`, `status`, `query`) | Protected | any |
+| GET | `/api/employees/statistics` | Get employee statistics | Protected | any |
+| GET | `/api/employees/:id` | Get an employee by MongoDB ID | Protected | any |
+| POST | `/api/employees` | Create a new employee | Protected | Admin |
+| PUT | `/api/employees/:id` | Update an employee | Protected | Admin |
+| DELETE | `/api/employees/:id` | Delete an employee | Protected | Admin |
+| POST | `/api/employees/:id/profile-image` | Upload a profile image for an employee | Protected | Admin |
+| DELETE | `/api/employees/:id/profile-image` | Delete an employee's profile image | Protected | Admin |
+
+Protected endpoints require a valid `Authorization: Bearer <token>` header.
+
+---
+
+# Authentication
+
+The API uses **JWT-based authentication**.
+
+- `POST /api/auth/register` and `POST /api/auth/login` are public.
+- All other employee endpoints require a valid JWT token (`protect` middleware).
+- On login, the server returns a signed `token` plus a safe user payload (`id`, `name`, `email`, `role`).
+- **Role-based authorization:** Employee create/update/delete and profile-image upload/delete require the `Admin` role (`authorize("Admin")`).
+- **Read-only** employee endpoints (list, get, search, statistics) are available to any authenticated user (Admin or Employee).
+- `User.role` is one of `Admin` or `Employee` (default `Employee`).
+
+### Authentication failures (`401`)
+
+- Missing or malformed `Authorization` header → `AUTH_REQUIRED`
+- Expired token → `TOKEN_EXPIRED`
+- Invalid token → `INVALID_TOKEN`
+- Logged-in user was not found → `USER_NOT_FOUND`
+- Invalid login credentials → `INVALID_CREDENTIALS`
+
+### Authorization failures (`403`)
+
+- An authenticated, non-admin user attempts an admin-only action → `FORBIDDEN`
+
+---
+
+# Centralized Error Handling
+
+The backend centralizes error handling so API clients always receive a consistent, safe error format.
+
+### `AppError` (`server/src/middleware/AppError.js`)
+
+A custom error class carrying a `message`, an HTTP `statusCode`, and a stable `code`. Controllers throw `AppError` for expected business/validation failures.
+
+### `asyncHandler` (`server/src/middleware/asyncHandler.js`)
+
+Wraps `async` route handlers and forwards any rejected promise to the centralized error middleware, avoiding repetitive `try/catch` blocks.
+
+### `errorMiddleware` (`server/src/middleware/errorMiddleware.js`)
+
+The Express error-handling middleware (registered last in `app.js`). It maps errors to the standard error response:
+
+- `AppError` → its `statusCode` and `code`
+- Mongoose `ValidationError` → `400 VALIDATION_ERROR`
+- Mongoose duplicate key (`11000`) → `409 DUPLICATE_RESOURCE`
+- Mongoose `CastError` → `400 INVALID_ID`
+- Unknown/unexpected errors → `500` "Internal server error"
+
+Sensitive internal details (stack traces, database connection details, credentials) are never sent to clients.
+
+### `notFound` (`server/src/middleware/notFound.js`)
+
+Registered after all API routes. Any unmatched request returns `404` with `code: "ROUTE_NOT_FOUND"`.
+
+---
+
+# HTTP Status Codes
+
+| Status | Meaning |
+|---|---|
+| `200` | OK |
+| `201` | Created |
+| `400` | Bad input / validation error |
+| `401` | Unauthenticated |
+| `403` | Forbidden / insufficient permission |
+| `404` | Resource or route not found |
+| `409` | Duplicate / conflict |
+| `500` | Unexpected server error |
+
+---
+
+# Error Codes
+
+| Code | HTTP Status | Description |
 |---|---|---|
-| GET | `/api/employees` | Get paginated employees (`page`, `limit`, `sort`) |
-| GET | `/api/employees/:id` | Get an employee by MongoDB ID |
-| POST | `/api/employees` | Create a new employee |
-| PUT | `/api/employees/:id` | Update an employee |
-| DELETE | `/api/employees/:id` | Delete an employee |
-| GET | `/api/employees/search` | Search employees |
-| GET | `/api/employees/statistics` | Get employee statistics |
-| POST | `/api/employees/:id/profile-image` | Upload a profile image for an employee |
-| DELETE | `/api/employees/:id/profile-image` | Delete an employee's profile image |
+| `VALIDATION_ERROR` | 400 | Invalid or missing input |
+| `INVALID_ID` | 400 | Invalid MongoDB ObjectId |
+| `INVALID_EMPLOYEE_DATA` | 400 | Invalid employee/list/search data |
+| `INVALID_IMAGE_TYPE` | 400 | File is not a valid JPG/PNG/WEBP image |
+| `PROFILE_IMAGE_REQUIRED` | 400 | Profile image upload missing the image file |
+| `INVALID_PROFILE_IMAGE_PATH` | 400 | Stored profile image path is invalid |
+| `INVALID_CREDENTIALS` | 401 | Bad email/password on login |
+| `AUTH_REQUIRED` | 401 | Missing or invalid authentication |
+| `INVALID_TOKEN` | 401 | Invalid authentication token |
+| `TOKEN_EXPIRED` | 401 | Expired authentication token |
+| `USER_NOT_FOUND` | 401 | Authenticated user not found |
+| `FORBIDDEN` | 403 | Authenticated user lacks permission |
+| `ROUTE_NOT_FOUND` | 404 | Unknown route |
+| `EMPLOYEE_NOT_FOUND` | 404 | Employee does not exist |
+| `DUPLICATE_RESOURCE` | 409 | Duplicate database field value |
+| `EMAIL_ALREADY_EXISTS` | 409 | Email already registered |
+| `EMPLOYEE_ALREADY_EXISTS` | 409 | Employee with that email already exists |
 
 ---
 
@@ -214,6 +408,8 @@ GET /api/employees?page=1&limit=10
 | `page` | `1` | Integer `>= 1` |
 | `limit` | `10` | Integer between `1` and `100` |
 | `sort` | none | Optional. Prefix `-` for descending (e.g. `-createdAt`), no prefix for ascending. Whitelisted fields: `name`, `email`, `department`, `salary`, `status`, `location`, `startDate`, `createdAt`, `updatedAt` |
+| `status` | none | Optional. Filter by employee `status` |
+| `department` | none | Optional. Filter by `department` |
 
 Invalid `page` or `limit` values return `400 Bad Request`.
 
@@ -235,22 +431,18 @@ GET /api/employees?page=1&limit=10
 ```http
 GET /api/employees?page=2&limit=10
 ```
-→ Skips the first 10 employees and returns the next 10 employees.
+→ Skips the first 10 employees and returns the next 10.
 
 ```http
 GET /api/employees?page=3&limit=10
 ```
-→ Skips the first 20 employees and returns the next 10 employees.
+→ Skips the first 20 employees and returns the next 10.
 
-The number of records skipped is calculated as `skip = (page - 1) * limit`, so:
-
-- `page` 1 starts from the first record
-- `page` 2 skips the first `limit` records
-- `page` 3 skips the first `2 × limit` records
+The number of records skipped is calculated as `skip = (page - 1) * limit`.
 
 ### Pagination Response
 
-Every paginated endpoint returns the same metadata shape:
+Every paginated endpoint returns the same metadata shape (placed **alongside** `data`, not inside it):
 
 ```json
 {
@@ -276,71 +468,28 @@ Every paginated endpoint returns the same metadata shape:
 | `hasNextPage` | Whether a next page exists |
 | `hasPreviousPage` | Whether a previous page exists |
 
-Object IDs are order-preserving, so `-createdAt` (or default natural order combined with `skip`/`limit`) is used to keep pagination stable across page requests.
-
 ---
 
 # Search Employees
 
-The search endpoint uses MongoDB queries and performs case-insensitive searches.
-
-## Search by Name
+The search endpoint performs case-insensitive MongoDB filtering and combines all provided conditions (`AND`).
 
 ```http
 GET /api/employees/search?name=rahul
-```
-
-## Search by Email
-
-```http
 GET /api/employees/search?email=rahul@gmail.com
-```
-
-## Search by Department
-
-```http
 GET /api/employees/search?department=Backend
-```
-
-Search is case-insensitive.
-
-For example:
-
-```text
-rahul
-RAHUL
-RahUl
-```
-
-will match the same employee names.
-
-### Multiple Search Parameters
-
-Multiple supported parameters can be combined:
-
-```http
+GET /api/employees/search?status=Active
 GET /api/employees/search?name=rahul&department=Backend
 ```
 
-When multiple parameters are provided, employees matching all specified conditions are returned.
-
-## Search with Pagination
-
-The search endpoint supports the same pagination query parameters:
-
-```http
-GET /api/employees/search?query=rahul&page=1&limit=10
-GET /api/employees/search?query=rahul&department=Backend&status=Active&page=2&limit=10
-```
-
-Invalid `page` or `limit` values return `400 Bad Request`. Paginated search responses include the same `pagination` metadata object as the list endpoint.
+Supported parameters: `name`, `email`, `department`, `status`, and `query`. The search endpoint supports the same pagination parameters (`page`, `limit`) as the list endpoint. Invalid `page` or `limit` values return `400 Bad Request`. Paginated search responses include the same `pagination` metadata object as the list endpoint.
 
 ---
 
 # Employee Data Model
 
 | Field | Type | Required | Validation |
-|---|---|---:|---|
+|---|---|---|---:|
 | `name` | String | Yes | Trimmed |
 | `email` | String | Yes | Unique, lowercase, trimmed, valid email format |
 | `department` | String | Yes | Trimmed |
@@ -367,7 +516,7 @@ Employees can have a single profile image. The image is uploaded and stored on t
 4. On form submission, the employee is first created or updated through the standard employee endpoints.
 5. The selected image is then uploaded using `multipart/form-data`.
 6. The backend receives the file through **Multer**.
-7. The uploaded file is validated both by its **MIME type** and by its **actual file signature/content**.
+7. The uploaded file is validated both by its **MIME type** and by its **actual file signature/content** (via `file-type`).
 8. A server-generated unique filename is used for storage.
 9. The file is stored on the server filesystem.
 10. Only the generated `/uploads/employees/<filename>` path is stored in MongoDB.
@@ -385,12 +534,12 @@ The profile image upload accepts the following image formats:
 | PNG | `image/png` |
 | WEBP | `image/webp` |
 
-Actual file content/signature validation is also performed on the uploaded file. The file's real content is checked, so the declared MIME type alone is not trusted as proof of file type.
+Actual file content/signature validation is also performed on the uploaded file, so the declared MIME type alone is not trusted as proof of file type.
 
 ## Maximum File Size
 
 - **Maximum:** 5 MB
-- **Exact backend limit:** `5 * 1024 * 1024` bytes
+- **Exact backend limit:** `5 * 1024 * 1024` bytes (`LIMIT_FILE_SIZE`)
 
 Files larger than this limit are rejected.
 
@@ -402,23 +551,22 @@ POST /api/employees/:id/profile-image
 
 Requirements:
 
-- Authentication required
+- Authentication required (`Authorization: Bearer <token>`)
 - Admin role required
 - Request must use `multipart/form-data`
 - File field name: `profileImage`
 
-### Example
+Example response:
 
-```http
-POST /api/employees/65f000000000000000000001/profile-image
-Content-Type: multipart/form-data
+```json
+{
+  "success": true,
+  "message": "Profile image updated successfully",
+  "data": {
+    "profileImage": "/uploads/employees/1785345600000-6f2c4a9e-3a5b-4c0d-9e1f-2b8a7c6d5e4f.jpg"
+  }
+}
 ```
-
-Form data field:
-
-| Field name | Type | Description |
-|---|---|---|
-| `profileImage` | File | The image file to upload for the employee |
 
 ## Delete Endpoint
 
@@ -432,12 +580,17 @@ Requirements:
 - Admin role required
 - Deletes the stored profile image and clears `Employee.profileImage`
 
-## Authentication Requirement
+If the employee has no profile image, it returns `200` with `message: "No profile image to delete."`. Otherwise it removes the stored file and clears the path:
 
-- Profile image upload/delete requires authentication.
-- Only users with the **Admin** role are authorized to upload or delete profile images.
-- Unauthenticated requests return **401**.
-- Authenticated, non-admin users return **403**.
+```json
+{
+  "success": true,
+  "message": "Profile image deleted successfully",
+  "data": {
+    "profileImage": ""
+  }
+}
+```
 
 ## Where Files Are Stored
 
@@ -451,28 +604,46 @@ server/uploads/employees/
 - Original filenames are not used for storage.
 - The uploads directory is git-ignored.
 
-## Why Images Are Not Stored Directly in MongoDB
-
-- MongoDB stores only the image **path** as a `String`.
-- Image binary/Base64 data is not stored in the Employee document.
-- This keeps employee documents smaller and avoids unnecessarily increasing database size.
-- The filesystem and static serving are used for image delivery.
-- The database acts as the reference to the stored file rather than holding the image itself.
-
 ---
 
 # Request Examples
 
-## 1. Create Employee
-
-### Request
+## 1. Register User
 
 ```http
-POST /api/employees
+POST /api/auth/register
 Content-Type: application/json
 ```
 
-### Body
+```json
+{
+  "name": "Rahul Kumar",
+  "email": "rahul@example.com",
+  "password": "yourpassword"
+}
+```
+
+## 2. Login User
+
+```http
+POST /api/auth/login
+Content-Type: application/json
+```
+
+```json
+{
+  "email": "rahul@example.com",
+  "password": "yourpassword"
+}
+```
+
+## 3. Create Employee
+
+```http
+POST /api/employees
+Authorization: Bearer <token>
+Content-Type: application/json
+```
 
 ```json
 {
@@ -487,40 +658,31 @@ Content-Type: application/json
 }
 ```
 
----
-
-## 2. Get Employees (Paginated)
+## 4. Get Employees (Paginated)
 
 ```http
 GET /api/employees?page=1&limit=10
+Authorization: Bearer <token>
 ```
 
 `page` defaults to `1` and `limit` defaults to `10`. See the Pagination section for validation rules.
 
-No request body is required.
-
----
-
-## 3. Get Employee by ID
+## 5. Get Employee by ID
 
 ```http
 GET /api/employees/65f000000000000000000001
+Authorization: Bearer <token>
 ```
 
 Replace the example ID with an actual employee MongoDB ID.
 
----
-
-## 4. Update Employee
-
-### Request
+## 6. Update Employee
 
 ```http
 PUT /api/employees/65f000000000000000000001
+Authorization: Bearer <token>
 Content-Type: application/json
 ```
-
-### Body
 
 ```json
 {
@@ -535,110 +697,73 @@ Content-Type: application/json
 }
 ```
 
----
-
-## 5. Delete Employee
+## 7. Delete Employee
 
 ```http
 DELETE /api/employees/65f000000000000000000001
+Authorization: Bearer <token>
 ```
 
-Replace the example ID with an actual employee MongoDB ID.
-
----
-
-## 6. Search Employees
-
-### By Name
+## 8. Search Employees
 
 ```http
 GET /api/employees/search?name=rahul
-```
-
-### By Email
-
-```http
 GET /api/employees/search?email=rahul@gmail.com
-```
-
-### By Department
-
-```http
 GET /api/employees/search?department=Backend
-```
-
-### By Query with Pagination
-
-```http
 GET /api/employees/search?query=rahul&page=1&limit=10
+Authorization: Bearer <token>
 ```
 
-Every search request accepts the same `page` and `limit` parameters as the list endpoint.
-
-## 7. Get Employee Statistics
+## 9. Get Employee Statistics
 
 ```http
 GET /api/employees/statistics
+Authorization: Bearer <token>
 ```
 
-No request body is required.
-
----
-
-## 8. Upload Employee Profile Image
-
-### Request
+## 10. Upload Employee Profile Image
 
 ```http
 POST /api/employees/65f000000000000000000001/profile-image
+Authorization: Bearer <token>
 Content-Type: multipart/form-data
 ```
 
 The request body contains the image file in the `profileImage` field. See the [Employee Profile Image Upload](#employee-profile-image-upload) section for file type and size requirements.
 
-### Response
-
-```json
-{
-  "success": true,
-  "message": "Profile image uploaded successfully",
-  "data": {
-    "_id": "65f000000000000000000001",
-    "name": "Rahul Kumar",
-    "email": "rahul@example.com",
-    "profileImage": "/uploads/employees/1785345600000-6f2c4a9e-3a5b-4c0d-9e1f-2b8a7c6d5e4f.jpg",
-    "createdAt": "2026-08-20T10:30:00.000Z",
-    "updatedAt": "2026-08-20T11:00:00.000Z"
-  }
-}
-```
-
----
-
-## 9. Delete Employee Profile Image
+## 11. Delete Employee Profile Image
 
 ```http
 DELETE /api/employees/65f000000000000000000001/profile-image
-```
-
-### Response
-
-```json
-{
-  "success": true,
-  "message": "Profile image deleted successfully"
-}
+Authorization: Bearer <token>
 ```
 
 ---
 
 # Response Examples
 
-## 1. Get Employees (Paginated)
+## 1. Login
 
 ```json
 {
   "success": true,
+  "message": "User logged in successfully",
+  "token": "<jwt>",
+  "data": {
+    "id": "65f000000000000000000001",
+    "name": "Rahul Kumar",
+    "email": "rahul@example.com",
+    "role": "Admin"
+  }
+}
+```
+
+## 2. Get Employees (Paginated)
+
+```json
+{
+  "success": true,
+  "message": "Employees fetched successfully",
   "data": [
     {
       "_id": "65f000000000000000000001",
@@ -665,44 +790,12 @@ DELETE /api/employees/65f000000000000000000001/profile-image
 }
 ```
 
----
-
-## 2. Get Employee by ID
-
-```json
-{
-  "success": true,
-  "data": {
-    "_id": "65f000000000000000000001",
-    "name": "Rahul Kumar",
-    "email": "rahul@example.com",
-    "department": "Backend",
-    "salary": 45000,
-    "status": "Active",
-    "phone": "9876543210",
-    "location": "Kochi",
-    "startDate": "2026-08-20T00:00:00.000Z",
-    "createdAt": "2026-08-20T10:30:00.000Z",
-    "updatedAt": "2026-08-20T10:30:00.000Z"
-  }
-}
-```
-
----
-
 ## 3. Create Employee
 
-### HTTP Status
-
-```text
-201 Created
-```
-
-### Response
-
 ```json
 {
   "success": true,
+  "message": "Employee created successfully",
   "data": {
     "_id": "65f000000000000000000001",
     "name": "Rahul Kumar",
@@ -719,86 +812,12 @@ DELETE /api/employees/65f000000000000000000001/profile-image
 }
 ```
 
----
-
-## 4. Update Employee
+## 4. Employee Statistics
 
 ```json
 {
   "success": true,
-  "data": {
-    "_id": "65f000000000000000000001",
-    "name": "Rahul Kumar",
-    "email": "rahul.updated@example.com",
-    "department": "Full Stack",
-    "salary": 55000,
-    "status": "Active",
-    "phone": "9876543210",
-    "location": "Mumbai",
-    "startDate": "2026-08-20T00:00:00.000Z",
-    "createdAt": "2026-08-20T10:30:00.000Z",
-    "updatedAt": "2026-08-20T11:00:00.000Z"
-  }
-}
-```
-
----
-
-## 5. Delete Employee
-
-### HTTP Status
-
-```text
-200 OK
-```
-
-### Response
-
-```json
-{
-  "success": true,
-  "message": "Employee deleted successfully"
-}
-```
-
----
-
-## 6. Search Employees
-
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "_id": "65f000000000000000000001",
-      "name": "Rahul Kumar",
-      "email": "rahul@example.com",
-      "department": "Backend",
-      "salary": 45000,
-      "status": "Active",
-      "phone": "9876543210",
-      "location": "Kochi",
-      "startDate": "2026-08-20T00:00:00.000Z"
-    }
-  ],
-  "pagination": {
-    "page": 1,
-    "limit": 10,
-    "totalEmployees": 25,
-    "totalPages": 3,
-    "hasNextPage": true,
-    "hasPreviousPage": false
-  }
-}
-```
-
----
-
-## 7. Employee Statistics
-
-```json
-{
-  "success": true,
+  "message": "Statistics fetched successfully",
   "data": {
     "totalEmployees": 10,
     "activeEmployees": 8,
@@ -817,165 +836,118 @@ DELETE /api/employees/65f000000000000000000001/profile-image
 
 # Error Responses
 
-The API uses centralized error handling.
-
-The standard error response format is:
+The API uses centralized error handling. The standard error response format is:
 
 ```json
 {
   "success": false,
-  "message": "Error message"
+  "message": "Error message",
+  "code": "ERROR_CODE"
 }
 ```
 
 ## Invalid MongoDB ID
 
-### HTTP Status
-
-```text
-400 Bad Request
-```
-
-### Response
+- **HTTP Status:** `400 Bad Request`
+- **Code:** `INVALID_ID`
 
 ```json
 {
   "success": false,
-  "message": "Invalid ID format"
+  "message": "Invalid ID format",
+  "code": "INVALID_ID"
 }
 ```
-
----
 
 ## Validation Error
 
-### HTTP Status
-
-```text
-400 Bad Request
-```
-
-### Example Response
+- **HTTP Status:** `400 Bad Request`
+- **Code:** `VALIDATION_ERROR`
 
 ```json
 {
   "success": false,
-  "message": "Please enter a valid email"
+  "message": "Please enter a valid email",
+  "code": "VALIDATION_ERROR"
 }
 ```
 
----
+## Duplicate Resource (Database)
 
-## Duplicate Email
-
-### HTTP Status
-
-```text
-400 Bad Request
-```
-
-### Response
+- **HTTP Status:** `409 Conflict`
+- **Code:** `DUPLICATE_RESOURCE`
 
 ```json
 {
   "success": false,
-  "message": "Duplicate value for email. email already exists."
+  "message": "Email already exists",
+  "code": "DUPLICATE_RESOURCE"
 }
 ```
 
----
+## Employee Already Exists
 
-## Unauthorized
+- **HTTP Status:** `409 Conflict`
+- **Code:** `EMPLOYEE_ALREADY_EXISTS`
 
-### HTTP Status
+Returned when creating an employee whose `email` already exists.
 
-```text
-401 Unauthorized
-```
+## Invalid Credentials
 
-### Response
+- **HTTP Status:** `401 Unauthorized`
+- **Code:** `INVALID_CREDENTIALS`
 
 ```json
 {
   "success": false,
-  "message": "Not authorized, token failed"
+  "message": "Invalid email or password",
+  "code": "INVALID_CREDENTIALS"
 }
 ```
 
-Returned when a request is made without a valid authentication token, including profile image upload and delete requests.
+## Authentication Required
 
----
+- **HTTP Status:** `401 Unauthorized`
+- **Code:** `AUTH_REQUIRED`
+
+Returned when a request is made without a valid authentication token (including profile image upload and delete requests).
+
+## Invalid / Expired Token
+
+- **HTTP Status:** `401 Unauthorized`
+- **Code:** `INVALID_TOKEN` / `TOKEN_EXPIRED`
 
 ## Forbidden
 
-### HTTP Status
-
-```text
-403 Forbidden
-```
-
-### Response
+- **HTTP Status:** `403 Forbidden`
+- **Code:** `FORBIDDEN`
 
 ```json
 {
   "success": false,
-  "message": "Not authorized as admin"
+  "message": "You do not have permission to perform this action",
+  "code": "FORBIDDEN"
 }
 ```
 
-Returned when an authenticated, non-admin user attempts an admin-only action such as profile image upload or delete.
-
----
+Returned when an authenticated, non-admin user attempts an admin-only action such as employee creation/update/delete or profile image upload/delete.
 
 ## Invalid Image Type
 
-### HTTP Status
-
-```text
-400 Bad Request
-```
-
-### Response
+- **HTTP Status:** `400 Bad Request`
+- **Code:** `INVALID_IMAGE_TYPE`
 
 ```json
 {
   "success": false,
-  "message": "Only JPG, PNG and WEBP images are allowed."
+  "message": "Only valid JPG, PNG and WEBP images are allowed.",
+  "code": "INVALID_IMAGE_TYPE"
 }
 ```
-
----
-
-## Invalid Image Content
-
-### HTTP Status
-
-```text
-400 Bad Request
-```
-
-### Response
-
-```json
-{
-  "success": false,
-  "message": "Only valid JPG, PNG and WEBP images are allowed."
-}
-```
-
-Returned when the uploaded file's declared MIME type does not match its actual file content/signature.
-
----
 
 ## Image Size Exceeded
 
-### HTTP Status
-
-```text
-400 Bad Request
-```
-
-### Response
+- **HTTP Status:** `400 Bad Request`
 
 ```json
 {
@@ -984,55 +956,35 @@ Returned when the uploaded file's declared MIME type does not match its actual f
 }
 ```
 
----
-
 ## Employee Not Found
 
-### HTTP Status
-
-```text
-404 Not Found
-```
-
-### Response
+- **HTTP Status:** `404 Not Found`
+- **Code:** `EMPLOYEE_NOT_FOUND`
 
 ```json
 {
   "success": false,
-  "message": "Employee not found"
+  "message": "Employee not found",
+  "code": "EMPLOYEE_NOT_FOUND"
 }
 ```
-
----
 
 ## Invalid Route
 
-### HTTP Status
-
-```text
-404 Not Found
-```
-
-### Response
+- **HTTP Status:** `404 Not Found`
+- **Code:** `ROUTE_NOT_FOUND`
 
 ```json
 {
   "success": false,
-  "message": "Not found"
+  "message": "Route not found",
+  "code": "ROUTE_NOT_FOUND"
 }
 ```
 
----
-
 ## Internal Server Error
 
-### HTTP Status
-
-```text
-500 Internal Server Error
-```
-
-### Response
+- **HTTP Status:** `500 Internal Server Error`
 
 ```json
 {
@@ -1041,7 +993,7 @@ Returned when the uploaded file's declared MIME type does not match its actual f
 }
 ```
 
-Technical database errors, stack traces, credentials, and other internal implementation details should not be exposed to API clients.
+Technical database errors, stack traces, credentials, and other internal implementation details are not exposed to API clients.
 
 ---
 
@@ -1063,22 +1015,6 @@ Update operations also run Mongoose validators so that updated employee data fol
 
 ---
 
-# Error Handling
-
-The API uses centralized error handling for common API errors, including:
-
-- Invalid MongoDB ObjectId
-- Employee not found
-- Duplicate email
-- Mongoose validation errors
-- Database errors
-- Unexpected server errors
-- Invalid routes
-
-API clients receive safe error messages without unnecessary internal technical details.
-
----
-
 # Database
 
 The application uses MongoDB with Mongoose for persistent employee storage.
@@ -1092,7 +1028,7 @@ Changes made through the API persist after restarting the server.
 # Notes
 
 - Run both the backend and frontend for the complete application.
-- Keep MongoDB credentials inside the `server/.env` file.
+- Keep MongoDB credentials and other secrets inside the `server/.env` file.
 - Never commit `.env` to version control.
 - Replace example MongoDB IDs with actual employee IDs when making API requests.
 - The statistics endpoint calculates values dynamically from MongoDB.

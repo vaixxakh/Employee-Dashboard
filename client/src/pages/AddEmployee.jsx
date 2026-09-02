@@ -151,8 +151,8 @@ export default function AddEmployeePage() {
     setEmployee(initialEmployee);
     clearProfileImageSelection();
     navigate("/employees");
-  } catch {
-    toast.error("Unable to add employee. Please try again.");
+    } catch (error) {
+      toast.error(error?.message || "Unable to add employee. Please try again.");
   } finally {
     isSubmittingRef.current = false;
     setIsSubmitting(false);

@@ -1,4 +1,5 @@
 import { apiFetch } from "./apiClient";
+import { getApiErrorMessage, throwApiError } from "../utils/apiError";
 
 export const getEmployees = async (filters = {}, pagination = {}) => {
   try {
@@ -25,15 +26,13 @@ export const getEmployees = async (filters = {}, pagination = {}) => {
     const response = await apiFetch(`/employees?${searchParams.toString()}`);
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      await throwApiError(response, "Failed to load employees. Please try again.");
     }
 
     const result = await response.json();
 
     if (!result.success || !Array.isArray(result.data)) {
-      throw new Error(
-        "Invalid API response: expected an array of employees"
-      );
+      throw new Error("Invalid API response: expected an array of employees");
     }
 
     return {
@@ -41,9 +40,7 @@ export const getEmployees = async (filters = {}, pagination = {}) => {
       pagination: result.pagination,
     };
   } catch (error) {
-    throw new Error(
-      `Failed to fetch employees: ${error.message}`
-    );
+    throw new Error(getApiErrorMessage(error, "Failed to load employees. Please try again."));
   }
 };
 
@@ -52,11 +49,7 @@ export const getEmployeeById = async (id) => {
     const response = await apiFetch(`/employees/${id}`);
 
     if (!response.ok) {
-      const errorBody = await response.json().catch(() => null);
-
-      throw new Error(
-        errorBody?.message || `HTTP error! status: ${response.status}`
-      );
+      await throwApiError(response, "Failed to load employee. Please try again.");
     }
 
     const result = await response.json();
@@ -67,9 +60,7 @@ export const getEmployeeById = async (id) => {
 
     return result.data;
   } catch (error) {
-    throw new Error(
-      `Failed to fetch employee: ${error.message}`
-    );
+    throw new Error(getApiErrorMessage(error, "Failed to load employee. Please try again."));
   }
 };
 
@@ -81,11 +72,7 @@ export const createEmployee = async (employeeData) => {
     });
 
     if (!response.ok) {
-      const errorBody = await response.json().catch(() => null);
-
-      throw new Error(
-        errorBody?.message || `HTTP error! status: ${response.status}`
-      );
+      await throwApiError(response, "Failed to create employee. Please try again.");
     }
 
     const result = await response.json();
@@ -96,9 +83,7 @@ export const createEmployee = async (employeeData) => {
 
     return result.data;
   } catch (error) {
-    throw new Error(
-      `Failed to create employee: ${error.message}`
-    );
+    throw new Error(getApiErrorMessage(error, "Failed to create employee. Please try again."));
   }
 };
 
@@ -110,11 +95,7 @@ export const updateEmployee = async (id, employeeData) => {
     });
 
     if (!response.ok) {
-      const errorBody = await response.json().catch(() => null);
-
-      throw new Error(
-        errorBody?.message || `HTTP error! status: ${response.status}`
-      );
+      await throwApiError(response, "Failed to update employee. Please try again.");
     }
 
     const result = await response.json();
@@ -125,9 +106,7 @@ export const updateEmployee = async (id, employeeData) => {
 
     return result.data;
   } catch (error) {
-    throw new Error(
-      `Failed to update employee: ${error.message}`
-    );
+    throw new Error(getApiErrorMessage(error, "Failed to update employee. Please try again."));
   }
 };
 
@@ -155,11 +134,7 @@ export const searchEmployees = async (params = {}, pagination = {}, options = {}
     );
 
     if (!response.ok) {
-      const errorBody = await response.json().catch(() => null);
-
-      throw new Error(
-        errorBody?.message || `HTTP error! status: ${response.status}`
-      );
+      await throwApiError(response, "Failed to search employees. Please try again.");
     }
 
     const result = await response.json();
@@ -177,9 +152,7 @@ export const searchEmployees = async (params = {}, pagination = {}, options = {}
       throw error;
     }
 
-    throw new Error(
-      `Failed to search employees: ${error.message}`
-    );
+    throw new Error(getApiErrorMessage(error, "Failed to search employees. Please try again."));
   }
 };
 
@@ -190,18 +163,12 @@ export const deleteEmployee = async (id) => {
     });
 
     if (!response.ok) {
-      const errorBody = await response.json().catch(() => null);
-
-      throw new Error(
-        errorBody?.message || `HTTP error! status: ${response.status}`
-      );
+      await throwApiError(response, "Failed to delete employee. Please try again.");
     }
 
     return true;
   } catch (error) {
-    throw new Error(
-      `Failed to delete employee: ${error.message}`
-    );
+    throw new Error(getApiErrorMessage(error, "Failed to delete employee. Please try again."));
   }
 };
 
@@ -216,11 +183,7 @@ export const uploadEmployeeImage = async (id, file) => {
     });
 
     if (!response.ok) {
-      const errorBody = await response.json().catch(() => null);
-
-      throw new Error(
-        errorBody?.message || `HTTP error! status: ${response.status}`
-      );
+      await throwApiError(response, "Failed to upload profile image. Please try again.");
     }
 
     const result = await response.json();
@@ -231,9 +194,7 @@ export const uploadEmployeeImage = async (id, file) => {
 
     return result.data;
   } catch (error) {
-    throw new Error(
-      `Failed to upload profile image: ${error.message}`
-    );
+    throw new Error(getApiErrorMessage(error, "Failed to upload profile image. Please try again."));
   }
 };
 
@@ -244,11 +205,7 @@ export const deleteEmployeeImage = async (id) => {
     });
 
     if (!response.ok) {
-      const errorBody = await response.json().catch(() => null);
-
-      throw new Error(
-        errorBody?.message || `HTTP error! status: ${response.status}`
-      );
+      await throwApiError(response, "Failed to delete profile image. Please try again.");
     }
 
     const result = await response.json();
@@ -259,9 +216,7 @@ export const deleteEmployeeImage = async (id) => {
 
     return result.data;
   } catch (error) {
-    throw new Error(
-      `Failed to delete profile image: ${error.message}`
-    );
+    throw new Error(getApiErrorMessage(error, "Failed to delete profile image. Please try again."));
   }
 };
 
@@ -270,11 +225,7 @@ export const getStatistics = async () => {
     const response = await apiFetch("/employees/statistics");
 
     if (!response.ok) {
-      const errorBody = await response.json().catch(() => null);
-
-      throw new Error(
-        errorBody?.message || `HTTP error! status: ${response.status}`
-      );
+      await throwApiError(response, "Failed to load statistics. Please try again.");
     }
 
     const result = await response.json();
@@ -285,8 +236,6 @@ export const getStatistics = async () => {
 
     return result.data;
   } catch (error) {
-    throw new Error(
-      `Failed to fetch statistics: ${error.message}`
-    );
+    throw new Error(getApiErrorMessage(error, "Failed to load statistics. Please try again."));
   }
 };

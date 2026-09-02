@@ -1,6 +1,7 @@
 const express = require("express");
 
 const { protect, authorize } = require("../middleware/authMiddleware");
+const { asyncHandler } = require("../middleware/asyncHandler");
 
 const {
   listEmployees,
@@ -20,34 +21,34 @@ const { validateImageContent } = require("../middleware/imageContentValidator");
 
 const router = express.Router();
 
-router.use(protect);
+router.get("/employees", asyncHandler(protect), asyncHandler(listEmployees));
 
-router.get("/employees", listEmployees);
+router.get("/employees/search", asyncHandler(protect), asyncHandler(searchEmployeeList));
 
-router.get("/employees/search", searchEmployeeList);
+router.get("/employees/statistics", asyncHandler(protect), asyncHandler(getStatistics));
 
-router.get("/employees/statistics", getStatistics);
+router.get("/employees/:id", asyncHandler(protect), asyncHandler(getEmployee));
 
-router.get("/employees/:id", getEmployee);
+router.post("/employees", asyncHandler(protect), authorize("Admin"), asyncHandler(createEmployee));
 
-router.post("/employees", authorize("Admin"), createEmployee);
+router.put("/employees/:id", asyncHandler(protect), authorize("Admin"), asyncHandler(editEmployee));
 
-router.put("/employees/:id", authorize("Admin"), editEmployee);
-
-router.delete("/employees/:id", authorize("Admin"), removeEmployee);
+router.delete("/employees/:id", asyncHandler(protect), authorize("Admin"), asyncHandler(removeEmployee));
 
 router.post(
   "/employees/:id/profile-image",
+  asyncHandler(protect),
   authorize("Admin"),
   uploadEmployeeImage.single("profileImage"),
   validateImageContent,
-  uploadEmployeeProfileImage
+  asyncHandler(uploadEmployeeProfileImage)
 );
 
 router.delete(
   "/employees/:id/profile-image",
+  asyncHandler(protect),
   authorize("Admin"),
-  deleteEmployeeProfileImage
+  asyncHandler(deleteEmployeeProfileImage)
 );
 
 module.exports = router;

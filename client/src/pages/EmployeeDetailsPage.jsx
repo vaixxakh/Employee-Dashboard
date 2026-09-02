@@ -1,7 +1,7 @@
 import React from 'react';
 
-import PageLoader from './PageLoader'
-import StatusBadge from './StatusBadge'
+import PageLoader from '../components/PageLoader'
+import StatusBadge from '../components/StatusBadge'
 
 import { Link, useNavigate , useParams} from 'react-router-dom'
 import { toast } from 'react-toastify'
@@ -9,7 +9,7 @@ import { formatSalary } from '../utils/formatSalary'
 import { convertToDateInputFormat } from '../utils/formatDate'
 import { getProfileImageUrl } from '../utils/profileImage'
 
-import ConfirmModal from "./ConfirmModal";
+import ConfirmModal from "../components/ConfirmModal";
 import { useAuth } from '../hooks/useAuth'
 import { useEmployeeData } from '../context/EmployeeContext'
 import { getEmployeeById } from '../services/userService'
@@ -97,9 +97,9 @@ export default function EmployeeDetailsPage() {
          setIsDeleteModalOpen(false)
 
         navigate('/employees')
-    } catch {
+    } catch (error) {
       toast.error(
-        "Unable to delete employee. Please try again."
+        error?.message || "Unable to delete employee. Please try again."
       );
     } finally{
       setIsDeleting(false)

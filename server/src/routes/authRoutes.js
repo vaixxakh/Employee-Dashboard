@@ -6,10 +6,12 @@ const {
   loginUser,
 } = require("../controllers/authController");
 
+const { asyncHandler } = require("../middleware/asyncHandler");
+
 const router = express.Router();
 
-router.post("/register", registerUser);
+router.post("/register", asyncHandler(registerUser));
 
-router.post("/login", loginUser);
+router.post("/login", asyncHandler(loginUser));
 
 module.exports = router;

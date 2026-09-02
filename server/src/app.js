@@ -8,7 +8,7 @@ const connectDB = require('./config/db');
 const employeeRoutes = require("./routes/employeeRoutes");
 const authRoutes = require("./routes/authRoutes");
 
-const { errorHandler } = require("./middleware/errorHandler");
+const { errorMiddleware } = require("./middleware/errorMiddleware");
 const { notFound } = require('./middleware/notFound');
 
 const app = express();
@@ -31,6 +31,6 @@ app.use("/api/auth", authRoutes);
 app.use("/api", employeeRoutes);
 
 app.use(notFound);
-app.use(errorHandler);
+app.use(errorMiddleware);
 
 module.exports = app;

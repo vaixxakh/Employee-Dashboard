@@ -1,3 +1,5 @@
+import { getApiErrorMessage, throwApiError } from "../utils/apiError";
+
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const TOKEN_KEY = "authToken";
@@ -12,10 +14,7 @@ export const registerUser = async ({ name, email, password }) => {
     });
 
     if (!response.ok) {
-      const errorBody = await response.json().catch(() => null);
-      throw new Error(
-        errorBody?.message || `HTTP error! status: ${response.status}`
-      );
+      await throwApiError(response, "Unable to create account. Please try again.");
     }
 
     const result = await response.json();
@@ -26,7 +25,7 @@ export const registerUser = async ({ name, email, password }) => {
 
     return result.data;
   } catch (error) {
-    throw new Error(error.message);
+    throw new Error(getApiErrorMessage(error, "Unable to create account. Please try again."));
   }
 };
 
@@ -39,10 +38,7 @@ export const loginUser = async ({ email, password }) => {
     });
 
     if (!response.ok) {
-      const errorBody = await response.json().catch(() => null);
-      throw new Error(
-        errorBody?.message || `HTTP error! status: ${response.status}`
-      );
+      await throwApiError(response, "Unable to log in. Please try again.");
     }
 
     const result = await response.json();
@@ -53,7 +49,7 @@ export const loginUser = async ({ email, password }) => {
 
     return { token: result.token, user: result.data };
   } catch (error) {
-    throw new Error(error.message);
+    throw new Error(getApiErrorMessage(error, "Unable to log in. Please try again."));
   }
 };
 

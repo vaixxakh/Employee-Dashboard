@@ -1,5 +1,6 @@
 const fs = require("fs");
 const fsp = fs.promises;
+const { AppError } = require("./AppError");
 
 const ALLOWED_IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
@@ -27,7 +28,7 @@ function validateImageContent(req, res, next) {
 
     try {
       buffer = await fsp.readFile(req.file.path, {
-        // Only the magic-byte header is required for detection.
+        
         length: HEADER_BYTES_TO_READ,
       });
     } catch (error) {
@@ -48,11 +49,11 @@ function validateImageContent(req, res, next) {
       if (!accepted) {
         removeUploadedFile(req.file);
 
-        const error = new Error(
-          "Only valid JPG, PNG and WEBP images are allowed."
+        throw new AppError(
+          "Only valid JPG, PNG and WEBP images are allowed.",
+          400,
+          "INVALID_IMAGE_TYPE"
         );
-        error.status = 400;
-        return next(error);
       }
 
       return next();

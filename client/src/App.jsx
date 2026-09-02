@@ -1,15 +1,15 @@
 import React from 'react'
 
-import FullScreenLoader from '../components/FullScreenLoader'
-import AppRoutes from '../components/AppRoutes'
-import ScrollToTop from '../components/ScrollToTop'
+import FullScreenLoader from './components/FullScreenLoader'
+import AppRoutes from './components/AppRoutes'
+import ScrollToTop from './components/ScrollToTop'
 
-import '../App.css'
+import './App.css'
 import 'react-toastify/dist/ReactToastify.css';
 
 import { BrowserRouter } from 'react-router-dom'
 import { ToastContainer } from "react-toastify";
-import { AuthProvider } from '../context/AuthContext.jsx'
+import { AuthProvider } from './context/AuthContext.jsx'
 
 
 export default function App() {

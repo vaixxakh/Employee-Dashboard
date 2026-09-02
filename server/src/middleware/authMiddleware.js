@@ -1,72 +1,78 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const { AppError } = require("./AppError");
 
 async function protect(req, res, next) {
-  try {
-    const authHeader = req.headers.authorization;
+  const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({
-        success: false,
-        message: "Not authorized, no token provided",
-      });
-    }
-
-    const token = authHeader.split(" ")[1];
-
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "Not authorized, malformed authorization header",
-      });
-    }
-
-    let decoded;
-
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (err) {
-      const message =
-        err.name === "TokenExpiredError"
-          ? "Session expired, please log in again"
-          : "Not authorized, invalid token";
-
-      return res.status(401).json({
-        success: false,
-        message,
-      });
-    }
-
-    const user = await User.findById(decoded.id).select("-password");
-
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "Not authorized, user no longer exists",
-      });
-    }
-
-    req.user = user;
-    next();
-  } catch (error) {
-    next(error);
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    throw new AppError(
+      "Authentication required",
+      401,
+      "AUTH_REQUIRED"
+    );
   }
+
+  const token = authHeader.split(" ")[1];
+
+  if (!token) {
+    throw new AppError(
+      "Authentication required",
+      401,
+      "AUTH_REQUIRED"
+    );
+  }
+
+  let decoded;
+
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (err) {
+    if (err.name === "TokenExpiredError") {
+      throw new AppError(
+        "Authentication token expired",
+        401,
+        "TOKEN_EXPIRED"
+      );
+    }
+
+    throw new AppError(
+      "Invalid authentication token",
+      401,
+      "INVALID_TOKEN"
+    );
+  }
+
+  const user = await User.findById(decoded.id).select("-password");
+
+  if (!user) {
+    throw new AppError(
+      "Authentication required",
+      401,
+      "USER_NOT_FOUND"
+    );
+  }
+
+  req.user = user;
+  next();
 }
 
 function authorize(...roles) {
   return (req, res, next) => {
     if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: "Not authenticated",
-      });
+      throw new AppError(
+        "Authentication required",
+        401,
+        "AUTH_REQUIRED"
+      );
     }
 
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({
-        success: false,
-        message: "Access denied, insufficient permissions",
-      });
+      throw new AppError(
+        "You do not have permission to perform this action",
+        403,
+        "FORBIDDEN"
+      );
     }
 
     next();

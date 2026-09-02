@@ -195,8 +195,8 @@ const handleSubmit = async (e) => {
 
     clearProfileImageSelection();
     navigate('/employees');
-  } catch {
-    toast.error('Unable to update employee. Please try again.');
+  } catch (error) {
+    toast.error(error?.message || 'Unable to update employee. Please try again.');
   } finally {
     isSubmittingRef.current = false;
     setIsSubmitting(false);
